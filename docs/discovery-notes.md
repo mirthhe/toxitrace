@@ -18,7 +18,23 @@ Source: `GET https://platform.toxindex.com/v1/openapi.json` (2026-10-21), ToxInd
 - **Agent attribution headers:** `POST /tools/{name}` accepts the `X-ToxIndex-Agent-Name`, `-Model`, `-Harness` and `-Host` headers. The `sysrev_*` tools require them. Sending them would label our calls honestly in ToxIndex's logs.
 - **Not in the spec:** rate limits (no 429 is documented) and timeouts.
 
-Still to fill in after listing the tools:
+### Tool catalogs (`GET /tools`, `GET /toxjobs/tool`, 2026-10-21)
+
+- **`/tools`: 43 agent tools.** The relevant ones:
+  - `toxjobs_predict {tool, input | smiles}` runs any toxjobs model.
+  - `tox_chemical_identity {identifier}` resolves a name, CAS, DTXSID, InChIKey or SMILES against EPA DSSTox. It returns up to 5 candidates (dtxsid, cas, inchikey, preferred name, formula, QSAR-ready SMILES) plus a `total`. `total > 1` means the identifier is ambiguous and `0` means no match.
+  - `tox_genotoxicity`, `tox_carcinogenicity`, `tox_acute_toxicity`, etc. return evidence-backed GHS verdicts. `tox_genotoxicity` separates the bacterial, in vitro mammalian and in vivo assay results, and reports `findings`, `conflicts` and `gaps`.
+  - `kiln_*` and `document_*` cover datasets and documents. `sysrev_*` covers reviews; those tools are write-capable, so we don't use them.
+- **`/toxjobs/tool`: 175 models.** Most take `smiles`. The `output_schema` field is **empty** for the models checked (amesformer, vega-mutagenicity, ames-structural-alerts), so the response shape has to come from a real call.
+
+### Candidate pipeline: Ames mutagenicity
+
+- **Identity:** `tox_chemical_identity` turns a name or CAS into a DTXSID and SMILES, and lets us reject ambiguous input.
+- **Prediction:** `toxjobs_predict` with `amesformer`. Per its description, this returns P(Ames-positive) and a call at a 0.5 threshold.
+- **Evidence:** `tox_genotoxicity` returns curated experimental Ames results (ISSSTY, Hansen, EFSA) with each finding labelled by assay.
+- **Caveat:** AmesFormer was trained on Hansen, ISSSTY and EURL data, which overlaps with the evidence sources. Agreement on a well-known chemical is therefore **not** an independent validation.
+
+Still to fill in after a real call:
 
 - Chosen endpoint / tool:
 - Model identifier:
