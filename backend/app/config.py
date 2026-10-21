@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     toxindex_api_key: str = ""
-    toxindex_base_url: str = "https://platform.toxindex.com"
+    toxindex_base_url: str = "https://platform.toxindex.com/v1"
     toxindex_timeout_seconds: float = 30.0
 
     llm_api_key: str = ""

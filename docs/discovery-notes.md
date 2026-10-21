@@ -4,18 +4,34 @@ Fill in from the real, authenticated API. No guessed fields.
 
 ## ToxIndex
 
-- Access method (REST / MCP):
-- Auth scheme:
+Source: `GET https://platform.toxindex.com/v1/openapi.json` (2026-10-21), ToxIndex API v1.
+
+- **Access method:** REST at `https://platform.toxindex.com/v1`. The API keys page also lists `/mcp` and `/a2a` endpoints.
+- **Auth scheme:** `Authorization: Bearer <key>` (OpenAPI `securitySchemes.bearer`). Keys are created at `/settings/keys`.
+- **API surfaces:**
+  - `GET /tools`, `POST /tools/{name}`: the agent tool catalog. Each tool has a `name`, `description` and a JSON Schema `input_schema`. The response to an execute call is text, which may itself be JSON depending on the tool. Documented errors are `404` and `422`, both with body `{"error": string}`.
+  - `GET /toxjobs/tool[?q=]`, `GET /toxjobs/tool/{name}`: "live analysis tools served by ready rigs". These carry both `input_schema` and `output_schema`, serialised as strings. Returns `501` when unavailable.
+  - `/kiln/*`: curated reference datasets ("bricks"), full-text document search, and read-only SPARQL. **This looks like BioBricks data reachable through the same API.**
+  - `/sysrev/*`: Sysrev projects, documents, reviews and exports.
+  - `/agent/*`: ToxIndex's own conversations, plus `GET /agent/{conversation}/tool/{toolCallId}` for tool-call provenance.
+  - `GET /whoami`: identity check for the credential.
+- **Agent attribution headers:** `POST /tools/{name}` accepts the `X-ToxIndex-Agent-Name`, `-Model`, `-Harness` and `-Host` headers. The `sysrev_*` tools require them. Sending them would label our calls honestly in ToxIndex's logs.
+- **Not in the spec:** rate limits (no 429 is documented) and timeouts.
+
+Still to fill in after listing the tools:
+
 - Chosen endpoint / tool:
 - Model identifier:
 - Input type + sample chemical:
-- Response schema (paste sanitized example):
+- Response schema (paste a sanitised example):
 - Score semantics / units:
-- Error conditions observed (invalid input, 401, 429, timeout):
+- Error conditions observed:
 - Provenance fields available:
 - Question this endpoint can answer without overstating:
 
 ## BioBricks (optional)
+
+Possibly reachable through `/kiln/brick` instead of a separate BioBricks client. Still to check.
 
 - Dataset:
 - Schema:

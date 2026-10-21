@@ -17,7 +17,7 @@ class ToxIndexError(Exception):
 def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(
         base_url=settings.toxindex_base_url,
-        headers={"Authorization": f"Bearer {settings.toxindex_api_key}"},  # TODO: confirm auth scheme
+        headers={"Authorization": f"Bearer {settings.toxindex_api_key}"},
         timeout=settings.toxindex_timeout_seconds,
     )
 
@@ -25,7 +25,7 @@ def _client() -> httpx.AsyncClient:
 async def fetch_openapi_schema() -> dict:
     """Discovery helper: pull the live OpenAPI schema."""
     async with _client() as client:
-        resp = await client.get("/v1/openapi.json")
+        resp = await client.get("/openapi.json")
         resp.raise_for_status()
         return resp.json()
 
