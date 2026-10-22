@@ -112,7 +112,7 @@ Each analysis then makes at most 3 ToxIndex calls and 1–2 PubChem calls.
 Run these from `backend/`:
 
 ```bash
-uv run pytest                   # 103 unit and API tests on recorded responses; offline, no keys
+uv run pytest                   # 106 unit and API tests on recorded responses; offline, no keys
 uv run ruff check app tests     # lint
 uv run pytest -m live           # opt-in contract tests against the live APIs (3 ToxIndex calls)
 ```
