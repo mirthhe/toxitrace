@@ -12,6 +12,7 @@ import time
 
 import anthropic
 
+from app import mode
 from app.config import settings
 from app.schemas import AnalysisResult, Check, Interpretation
 from app.trace import Tracer
@@ -172,6 +173,9 @@ async def _call_llm(payload: dict) -> tuple[dict, dict]:
 async def narrate(result: AnalysisResult, tracer: Tracer) -> tuple[Interpretation, Check]:
     """Return an accepted LLM narrative, or the template with the reason it was used."""
     fallback = Interpretation(text=template(result), source="template")
+    if not mode.llm_enabled():
+        return fallback.model_copy(update={"note": "Public demo mode: no LLM call is made."}), Check(
+            name="R10 grounding", status="not_run", detail="template used: public demo mode")
     if not settings.llm_api_key:
         return fallback.model_copy(update={"note": "No LLM key configured."}), Check(
             name="R10 grounding", status="not_run", detail="template used: no LLM key configured")

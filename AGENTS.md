@@ -39,6 +39,20 @@ npm install && npm run dev
 
 Use offline mode for development and UI work. Without `TOXITRACE_OFFLINE`, every analysis makes live ToxIndex and PubChem calls (see the policy below). Offline mode does not cover the Claude API: if `LLM_API_KEY` is set, each analysis makes one Claude call for the narrative (rule R10); leave it unset to use the deterministic template.
 
+## Deployment (Vercel)
+
+[vercel.json](vercel.json) deploys two services in one project: the frontend (`frontend/`) and the FastAPI backend (`backend/`, entrypoint `app.main:app`), with `/api/*` routed to the backend.
+
+- **Access control.** With `DEMO_ACCESS_CODE` set, every visitor gets the offline demo (recorded responses, template narrative, no API calls). Only requests carrying the code (header `X-Access-Code`, entered via "Unlock live mode") run live, capped by `LIVE_ANALYSES_PER_HOUR` (default 30, per instance). See `app/mode.py`.
+- **Reference data.** The backend build step downloads it into `backend/data/`. If that is not available at runtime, `FETCH_REFERENCE_DATA_ON_DEMAND=true` downloads it into the instance's temp directory on first use (~25 s once per instance).
+- **Environment variables (Vercel project settings, never in the repo):**
+  - `TOXINDEX_API_KEY`;
+  - `LLM_API_KEY`;
+  - `DEMO_ACCESS_CODE`;
+  - `FETCH_REFERENCE_DATA_ON_DEMAND=true`;
+  - optionally `LIVE_ANALYSES_PER_HOUR`.
+- **Never deploy with a ToxIndex or LLM key but without `DEMO_ACCESS_CODE`:** anyone could then spend the quota under the maintainer's name.
+
 ## External API usage policy
 
 ToxiTrace calls shared, hosted services: ToxIndex (authenticated, logged per API key), PubChem (public, rate-limited) and, for the narrative only, the Claude API (billed per call). Treat every call as visible and deliberate.

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "frontend": {
+      "root": "frontend/"
+    },
+    "backend": {
+      "root": "backend/",
+      "entrypoint": "app.main:app",
+      "buildCommand": "uv run --no-dev python -m app.reference_data --data-dir data || echo 'Reference data deferred to first request'",
+      "functions": {
+        "app/main.py": {
+          "maxDuration": 120,
+          "excludeFiles": "{tests/**,.venv/**,data/raw/**,.pytest_cache/**,.ruff_cache/**}"
+        }
+      }
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": { "service": "backend" } },
+    { "source": "/(.*)", "destination": { "service": "frontend" } }
+  ]
+}

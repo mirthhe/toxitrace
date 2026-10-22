@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { analyze, getHealth } from './api'
+import { analyze, getHealth, setAccessCode } from './api'
 import { ContextTab } from './components/ContextTab'
 import { EvidenceTab } from './components/EvidenceTab'
 import { OverviewTab } from './components/OverviewTab'
@@ -37,11 +37,19 @@ export default function App() {
   const [input, setInput] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
 
-  useEffect(() => {
+  const refreshHealth = () =>
     getHealth()
       .then(setHealth)
       .catch(() => setHealth(null))
+
+  useEffect(() => {
+    refreshHealth()
   }, [])
+
+  function changeAccessCode(code: string | null) {
+    setAccessCode(code)
+    refreshHealth()
+  }
 
   async function run(text: string) {
     const trimmed = text.trim()
@@ -72,7 +80,7 @@ export default function App() {
             <Logo />
             <span className="wordmark">ToxiTrace</span>
           </div>
-          <ModeBadge health={health} />
+          <ModeBadge health={health} onAccessCode={changeAccessCode} />
         </header>
 
         <section className="intro">
@@ -140,19 +148,60 @@ function Logo() {
   )
 }
 
-function ModeBadge({ health }: { health: Health | null }) {
+function ModeBadge({ health, onAccessCode }: { health: Health | null; onAccessCode: (code: string | null) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [code, setCode] = useState('')
+
   if (!health) return <span className="mode mode-down">Backend unreachable</span>
-  if (health.mode === 'offline') {
+
+  if (health.mode === 'live') {
     return (
+      <div className="mode-group">
+        <span className="mode mode-live" title="Each analysis calls ToxIndex, PubChem and Claude.">
+          Live APIs{health.toxindex_key_configured ? '' : ' · no ToxIndex key'}
+        </span>
+        {health.access_code_required && (
+          <button type="button" className="mode-action" onClick={() => onAccessCode(null)}>
+            Back to demo
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="mode-group">
       <span className="mode mode-offline" title="Answers come from recorded real API responses, not live calls.">
         Offline · recorded responses
       </span>
-    )
-  }
-  return (
-    <span className="mode mode-live" title="Each analysis calls ToxIndex and PubChem.">
-      Live APIs{health.toxindex_key_configured ? '' : ' · no ToxIndex key'}
-    </span>
+      {health.access_code_required &&
+        (editing ? (
+          <form
+            className="unlock"
+            onSubmit={(e) => {
+              e.preventDefault()
+              onAccessCode(code.trim() || null)
+              setEditing(false)
+            }}
+          >
+            <input
+              aria-label="Access code"
+              type="password"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Access code"
+              autoFocus
+            />
+            <button type="submit" className="mode-action">
+              Unlock
+            </button>
+          </form>
+        ) : (
+          <button type="button" className="mode-action" onClick={() => setEditing(true)}>
+            {health.access_code_rejected ? 'Code not accepted · try again' : 'Unlock live mode'}
+          </button>
+        ))}
+    </div>
   )
 }
 

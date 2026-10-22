@@ -9,8 +9,7 @@ from urllib.parse import quote
 
 import httpx
 
-from app import replay
-from app.config import settings
+from app import mode, replay
 from app.schemas import Candidate
 from app.trace import Tracer
 
@@ -28,7 +27,7 @@ async def _lookup(namespace: str, value: str, tracer: Tracer) -> tuple[str, list
     request = {"namespace": namespace, "value": value}
     start = time.perf_counter()
     try:
-        transport = replay.transport() if settings.toxitrace_offline else None
+        transport = replay.transport() if mode.offline() else None
         async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS, transport=transport) as client:
             resp = await client.get(url)
     except httpx.TimeoutException:

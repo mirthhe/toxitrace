@@ -180,4 +180,6 @@ export interface Health {
   mode: 'live' | 'offline'
   demo_inputs: string[]
   toxindex_key_configured: boolean
+  access_code_required: boolean
+  access_code_rejected: boolean
 }

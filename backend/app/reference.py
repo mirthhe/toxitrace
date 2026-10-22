@@ -119,6 +119,15 @@ def _ema_entries(path: Path, revision: str | None) -> dict[str, EmaEntry]:
 @cache
 def load(data_dir: Path | None = None) -> ReferenceData | None:
     data_dir = data_dir or settings.data_dir
+    if not (data_dir / "manifest.json").exists() and settings.fetch_reference_data_on_demand:
+        # Serverless deploys: the filesystem is read-only except /tmp. Same pinned, checksummed
+        # downloads as `python -m app.reference_data`, done once per instance.
+        import tempfile
+
+        from app.reference_data import prepare
+        data_dir = Path(tempfile.gettempdir()) / "toxitrace-data"
+        if not (data_dir / "manifest.json").exists():
+            prepare(data_dir)
     derived = data_dir / "derived"
     index_path = derived / "mutagenlou2023_index.csv"
     ema_path = derived / "ema_nitrosamine_ai.csv"

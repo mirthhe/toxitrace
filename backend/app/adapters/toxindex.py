@@ -9,7 +9,7 @@ from typing import Any
 
 import httpx
 
-from app import replay
+from app import mode, replay
 from app.config import settings
 from app.trace import Tracer
 
@@ -34,7 +34,7 @@ def _client() -> httpx.AsyncClient:
         base_url=settings.toxindex_base_url,
         headers={"Authorization": f"Bearer {settings.toxindex_api_key}"},
         timeout=settings.toxindex_timeout_seconds,
-        transport=replay.transport() if settings.toxitrace_offline else None,
+        transport=replay.transport() if mode.offline() else None,
     )
 
 

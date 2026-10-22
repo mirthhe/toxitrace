@@ -1082,3 +1082,44 @@ pre {
   margin: 6px 0 0;
   padding-left: 18px;
 }
+
+/* Live-mode access (public deployment) */
+
+.mode-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mode-action {
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  color: var(--on-hero);
+  font-size: 0.78rem;
+}
+
+.mode-action:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.unlock {
+  display: flex;
+  gap: 6px;
+}
+
+.unlock input {
+  width: 140px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  background: rgb(255 255 255 / 12%);
+  color: var(--on-hero);
+  font: 0.78rem var(--sans);
+}
+
+.unlock input::placeholder {
+  color: var(--on-hero-muted);
+}
