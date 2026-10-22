@@ -5,7 +5,7 @@ rules that need it say so, instead of silently skipping.
 """
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path
 
@@ -15,7 +15,7 @@ from rdkit.Chem import rdFingerprintGenerator
 
 from app.chem import parse_smiles
 from app.config import settings
-from app.schemas import EmaEntry, Neighbour
+from app.schemas import EmaEntry, HalfLife, Neighbour
 
 FINGERPRINT = "Morgan radius 2, 2048 bits, Tanimoto"
 MUTAGEN_DATASET = "MutagenLou2023 (CC BY 4.0)"
@@ -33,6 +33,9 @@ class ReferenceData:
     fingerprints: list
     ema: dict[str, EmaEntry]  # by InChIKey
     ema_revision: str | None
+    httk_params: dict[str, dict] = field(default_factory=dict)  # by DTXSID
+    httk_half_lives: dict[str, list[HalfLife]] = field(default_factory=dict)  # by DTXSID
+    httk_version: str | None = None
 
     def exact_match(self, key: str) -> Neighbour | None:
         rows = self.mutagens[self.mutagens["inchikey"] == key]
@@ -60,6 +63,38 @@ class ReferenceData:
             split=row["split"],
             similarity=round(float(similarity), 3),
         )
+
+
+def _median(value) -> float | None:
+    """httk stores some parameters as "median,lower,upper[,p-value]" strings."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        return float(value.split(",")[0])
+    except ValueError:
+        return None
+
+
+def _httk(derived: Path) -> tuple[dict[str, dict], dict[str, list[HalfLife]]]:
+    params = {}
+    for _, row in pd.read_csv(derived / "httk_chem_params.csv", dtype=str).iterrows():
+        if isinstance(row["DTXSID"], str):
+            params[row["DTXSID"]] = {
+                "compound": row["Compound"],
+                "clint_median": _median(row["Human.Clint"]),
+                "clint_reference": row["Human.Clint.Reference"] if isinstance(row["Human.Clint.Reference"], str) else None,
+                "fup_median": _median(row["Human.Funbound.plasma"]),
+                "fup_reference": (row["Human.Funbound.plasma.Reference"]
+                                  if isinstance(row["Human.Funbound.plasma.Reference"], str) else None),
+            }
+    half_lives: dict[str, list[HalfLife]] = {}
+    for _, row in pd.read_csv(derived / "httk_pfas_clearance.csv").iterrows():
+        if pd.notna(row["HalfLifeHours"]):
+            half_lives.setdefault(row["DTXSID"], []).append(HalfLife(
+                species=row["Species"], sex=row["Sex"], hours=float(row["HalfLifeHours"]),
+                reference=row["HlReference"] if isinstance(row["HlReference"], str) else None,
+            ))
+    return params, half_lives
 
 
 def _ema_entries(path: Path, revision: str | None) -> dict[str, EmaEntry]:
@@ -93,10 +128,16 @@ def load(data_dir: Path | None = None) -> ReferenceData | None:
     manifest = json.loads((data_dir / "manifest.json").read_text())
     revision = manifest["sources"].get("ema/ema_nitrosamine_ai.xlsx", {}).get("revision")
 
+    httk_source = next((k for k in manifest["sources"] if k.startswith("httk/")), None)
+    params, half_lives = _httk(derived) if (derived / "httk_chem_params.csv").exists() else ({}, {})
+
     mutagens = pd.read_csv(index_path)
     return ReferenceData(
         mutagens=mutagens,
         fingerprints=[fingerprint(s) for s in mutagens["smiles"]],
         ema=_ema_entries(ema_path, revision),
         ema_revision=revision,
+        httk_params=params,
+        httk_half_lives=half_lives,
+        httk_version=manifest["sources"][httk_source].get("version") if httk_source else None,
     )

@@ -68,6 +68,7 @@ async def test_pfoa_conflicting_with_domain_and_collision_flags(offline):
     assert any("cannot tell them apart" in f.message for f in result.flags)
     assert result.evidence == []
     assert result.regulatory.n_nitroso is False
+    assert result.toxicokinetics.status == "not_in_httk"  # the tiny reference has no httk data
 
 
 async def test_nnv_prediction_only_and_evidence_tool_not_called(offline):
@@ -79,6 +80,7 @@ async def test_nnv_prediction_only_and_evidence_tool_not_called(offline):
     assert result.regulatory.ema.cpca_category == "3"
     assert ("R6", "caution") in rules_fired(result)
     assert result.identity.name == "N-nitroso-varenicline"
+    assert result.toxicokinetics.status == "not_assessed"
     assert any("systematic name" in f.message for f in result.flags)
 
 

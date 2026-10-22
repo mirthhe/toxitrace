@@ -1,7 +1,7 @@
 """Analysis pipeline (docs/plan.md §4).
 
 identity (R1) -> ToxIndex prediction + evidence (in parallel) -> local reference data
--> rules R2-R8 -> computed summary. The LLM narrative (R10) and TK context (R9) follow later.
+-> rules R2-R9 -> computed summary. The LLM narrative (R10) follows later.
 
 At most 3 ToxIndex calls per analysis: identity, AmesFormer, genotoxicity.
 """
@@ -35,6 +35,10 @@ LIMITATIONS = [
     (
         "Structural similarity uses Morgan fingerprints (radius 2), which cannot distinguish some "
         "homologues; identity is therefore always checked by InChIKey."
+    ),
+    (
+        "Experimental Ames results are shown as overall calls only; strain-level and metabolic "
+        "activation (S9) detail is not displayed, although it matters for interpretation."
     ),
     "This is a research aid, not a regulatory assessment.",
 ]
@@ -110,6 +114,16 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
         )
         regulatory, r8_flags = rules.r8_nitrosamine(identity, ref_data.ema.get, regulatory_ref)
 
+    tk_ref = tracer.record(
+        "local", "httk lookup", "ok" if ref_data else "error",
+        {"dtxsid": identity.dtxsid, "httk_version": ref_data.httk_version if ref_data else None},
+        {"parameters": ref_data.httk_params.get(identity.dtxsid),
+         "half_lives": [h.model_dump() for h in ref_data.httk_half_lives.get(identity.dtxsid, [])]}
+        if ref_data and identity.dtxsid else None,
+        error=None if ref_data else "reference data not installed",
+    )
+    toxicokinetics, r9_flags = rules.r9_toxicokinetics(identity.dtxsid, ref_data, tk_ref)
+
     flags += rules.r2_predicted_vs_observed(predictions, evidence, upstream, unclassified)
     flags += rules.r3_disagreement(predictions, evidence)
     flags += rules.r4_applicability(predictions)
@@ -117,6 +131,7 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
     flags += rules.r6_structural_support(support, model)
     flags += rules.r7_not_retrieved(not_retrieved, evidence)
     flags += r8_flags
+    flags += r9_flags
 
     result.flags = flags
     result.predictions = predictions
@@ -125,6 +140,7 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
     result.upstream_verdict = upstream
     result.structural_support = support
     result.regulatory = regulatory
+    result.toxicokinetics = toxicokinetics
     # A substance outside DSSTox only has PubChem's systematic name; EMA's common name is clearer.
     if not identity.in_dsstox and regulatory.ema:
         flags.append(Flag(rule_id="R1", severity="info", refs=[regulatory.tool_ref],

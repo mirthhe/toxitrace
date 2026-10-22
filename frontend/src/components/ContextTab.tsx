@@ -1,5 +1,6 @@
 import type { AnalysisResult } from '../types'
 import { RefChip } from './RefChip'
+import { TkSection } from './TkSection'
 
 export function ContextTab({ result }: { result: AnalysisResult }) {
   const reg = result.regulatory
@@ -38,10 +39,7 @@ export function ContextTab({ result }: { result: AnalysisResult }) {
         </>
       )}
 
-      <h3>
-        Toxicokinetic context <span className="rule">R9</span>
-      </h3>
-      <p className="muted">Not built yet: httk half-lives where available.</p>
+      <TkSection tk={result.toxicokinetics} />
     </div>
   )
 }

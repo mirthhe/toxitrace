@@ -51,7 +51,9 @@ Response shapes and raw values are in [discovery-notes.md](discovery-notes.md).
 - **Training data:** NDMA is also in the MutagenLou2023 training split (verified locally by InChIKey).
 - **Why this matters:** AmesFormer's stated training sources (Hansen, ISSSTY, EURL) overlap with these, so the agreement is expected and is not evidence of predictive accuracy.
 - **In vivo:** the in vivo micronucleus result is **Equivocal**, so the GHS germ cell mutagenicity verdict is "Not classifiable" despite clear Ames positivity.
-  - *Background (unverified):* a plausible explanation is toxicokinetic. NDMA is activated mainly in the liver, with high first-pass extraction, so bone marrow (the usual micronucleus target tissue) may see little reactive metabolite.
+  - **Assay mismatch:** the micronucleus test detects clastogenic and aneugenic effects, whereas NDMA's mechanism is point mutation through DNA alkylation. An equivocal micronucleus result is therefore weak evidence either way; a transgenic rodent gene-mutation assay would be the appropriate in vivo test. This explanation was given by the ToxIndex chat agent (2026-10-22) and is consistent with the strain pattern below.
+  - *Background (unverified):* toxicokinetics may contribute. NDMA is activated mainly in the liver, with high first-pass extraction, so bone marrow may see little reactive metabolite.
+- **S9 dependence:** the ISSSTY strain-level data (as reported by the ToxIndex chat agent) is positive only with S9, in the base-pair substitution strains TA100, TA1535 and TA104, and negative in the frameshift strains TA98 and TA97. That pattern is consistent with methyldiazonium-mediated guanine alkylation. ToxiTrace currently reports only the overall call, not strain or S9 detail.
 
 ### PFOA: conflicting predictions, no experimental data retrieved
 

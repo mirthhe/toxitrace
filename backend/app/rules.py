@@ -16,6 +16,7 @@ from app.schemas import (
     RegulatoryContext,
     StructuralSupport,
     Summary,
+    TkContext,
     UpstreamVerdict,
 )
 
@@ -210,6 +211,52 @@ def r8_nitrosamine(identity: Identity, ema_lookup, ref: str) -> tuple[Regulatory
         flags.append(Flag(rule_id="R8", severity="info", refs=[ref],
                           message="Not on the EMA nitrosamine acceptable-intake list."))
     return context, flags
+
+
+def _duration(hours: float) -> str:
+    if hours >= 24 * 365:
+        return f"{hours / (24 * 365):.1f} years"
+    if hours >= 48:
+        return f"{hours / 24:.0f} days"
+    return f"{hours:.3g} h"
+
+
+def r9_toxicokinetics(dtxsid: str | None, ref_data, ref: str) -> tuple[TkContext, list[Flag]]:
+    """Where the hazard question ends and the exposure question begins.
+
+    TK context never changes the verdict; it shows how far animal results transfer to humans,
+    and states plainly when httk has nothing for this substance.
+    """
+    source = f"httk {ref_data.httk_version} (CRAN)" if ref_data and ref_data.httk_version else "httk"
+    if not dtxsid or ref_data is None:
+        reason = ("httk is keyed on DTXSID and this substance is not in EPA DSSTox"
+                  if not dtxsid else "reference data not installed")
+        return TkContext(status="not_assessed", source=source, tool_ref=ref), [Flag(
+            rule_id="R9", severity="info", refs=[ref], message=f"No toxicokinetic context: {reason}.")]
+
+    params = ref_data.httk_params.get(dtxsid)
+    half_lives = ref_data.httk_half_lives.get(dtxsid, [])
+    context = TkContext(status="not_in_httk", source=source, tool_ref=ref, half_lives=half_lives,
+                        **(params or {}))
+    if half_lives:
+        context.status = "half_lives"
+        low = min(half_lives, key=lambda h: h.hours)
+        high = max(half_lives, key=lambda h: h.hours)
+        message = (f"Measured half-lives range from {_duration(low.hours)} ({low.species.lower()}, "
+                   f"{low.sex.lower()}) to {_duration(high.hours)} ({high.species.lower()}, "
+                   f"{high.sex.lower()}), a factor of about {high.hours / low.hours:,.0f}. Animal "
+                   "results do not transfer to humans without a toxicokinetic model.")
+    elif params and (params["clint_median"] is not None or params["fup_median"] is not None):
+        context.status = "parameters_only"
+        message = ("httk has human in vitro toxicokinetic parameters but no measured half-life; "
+                   "no simulation is run here.")
+    elif params:
+        context.status = "no_human_parameters"
+        message = (f"{source} lists this substance but has no human in vitro toxicokinetic "
+                   "parameters, so no toxicokinetic context is available.")
+    else:
+        message = f"Not in {source}; no toxicokinetic context is available."
+    return context, [Flag(rule_id="R9", severity="info", refs=[ref], message=message)]
 
 
 def _weak_side_note(predictions: list[Prediction], support: StructuralSupport | None) -> str:

@@ -115,6 +115,25 @@ export interface RegulatoryContext {
   tool_ref: string
 }
 
+export interface HalfLife {
+  species: string
+  sex: string
+  hours: number
+  reference: string | null
+}
+
+export interface TkContext {
+  status: 'half_lives' | 'parameters_only' | 'no_human_parameters' | 'not_in_httk' | 'not_assessed'
+  compound: string | null
+  clint_median: number | null
+  clint_reference: string | null
+  fup_median: number | null
+  fup_reference: string | null
+  half_lives: HalfLife[]
+  source: string | null
+  tool_ref: string | null
+}
+
 export type SummaryLabel = 'supported_positive' | 'supported_negative' | 'conflicting' | 'prediction_only' | 'insufficient'
 
 export interface Summary {
@@ -135,6 +154,7 @@ export interface AnalysisResult {
   upstream_verdict: UpstreamVerdict | null
   structural_support: StructuralSupport | null
   regulatory: RegulatoryContext | null
+  toxicokinetics: TkContext | null
   limitations: string[]
   trace: TraceEntry[]
 }

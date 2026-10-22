@@ -916,3 +916,96 @@ pre {
 .limitations li + li {
   margin-top: 4px;
 }
+
+/* Half-life chart (log scale) */
+
+.hl-chart {
+  margin: 8px 0 12px;
+}
+
+.hl-chart figcaption {
+  margin-bottom: 10px;
+}
+
+.hl-row,
+.hl-axis {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.hl-row {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.hl-species {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.hl-bars {
+  display: grid;
+  gap: 4px;
+}
+
+.hl-bar-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hl-bar {
+  height: 10px;
+  min-width: 3px;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.hl-female {
+  background: #8fb39a;
+}
+
+.hl-male {
+  background: #3d6a4d;
+}
+
+.hl-bar.hl-human.hl-female {
+  background: #d9a774;
+}
+
+.hl-bar.hl-human.hl-male {
+  background: #c4703f;
+}
+
+.hl-value {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hl-ticks {
+  position: relative;
+  height: 22px;
+  border-top: 1px solid var(--line-strong);
+  margin-right: 90px;
+}
+
+.hl-bars {
+  margin-right: 90px;
+}
+
+.hl-ticks span {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.stat .small {
+  display: block;
+  margin-top: 2px;
+}

@@ -208,3 +208,48 @@ def test_summary_prediction_only_mentions_low_support():
     summary = rules.summarise(flags, [pred("AmesFormer-Pro", "positive")], [], analogues)
     assert "best similarity 0.32" in summary.text
     assert "R6" in summary.basis
+
+
+# R9
+class FakeHttk:
+    httk_version = "2.7.4"
+
+    def __init__(self, params=None, half_lives=None):
+        self.httk_params = params or {}
+        self.httk_half_lives = half_lives or {}
+
+
+def test_r9_half_lives_report_species_spread():
+    from app.schemas import HalfLife
+    data = FakeHttk(
+        params={"D1": {"compound": "PFOA", "clint_median": 0.0, "clint_reference": None,
+                       "fup_median": 0.00224, "fup_reference": None}},
+        half_lives={"D1": [HalfLife(species="Rat", sex="Female", hours=2.835),
+                           HalfLife(species="Human", sex="Male", hours=22340.0)]},
+    )
+    context, flags = rules.r9_toxicokinetics("D1", data, "local-4")
+
+    assert context.status == "half_lives"
+    assert context.fup_median == 0.00224
+    assert "2.83 h (rat, female) to 2.6 years (human, male)" in flags[0].message
+    assert "7,880" in flags[0].message
+
+
+def test_r9_listed_without_human_parameters_ndma_pattern():
+    data = FakeHttk(params={"D2": {"compound": "NDMA", "clint_median": None, "clint_reference": None,
+                                   "fup_median": None, "fup_reference": None}})
+    context, flags = rules.r9_toxicokinetics("D2", data, "local-4")
+    assert context.status == "no_human_parameters"
+    assert "no human in vitro" in flags[0].message
+
+
+def test_r9_not_in_httk():
+    context, _ = rules.r9_toxicokinetics("D3", FakeHttk(), "local-4")
+    assert context.status == "not_in_httk"
+
+
+def test_r9_without_dtxsid_is_not_assessed():
+    context, flags = rules.r9_toxicokinetics(None, FakeHttk(), "local-4")
+    assert context.status == "not_assessed"
+    assert "not in EPA DSSTox" in flags[0].message
+    assert all(f.severity == "info" for f in flags)  # TK context never raises the verdict

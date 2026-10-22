@@ -140,6 +140,30 @@ class RegulatoryContext(BaseModel):
     tool_ref: str
 
 
+class HalfLife(BaseModel):
+    species: str
+    sex: str
+    hours: float
+    reference: str | None = None
+
+
+TkStatus = Literal["half_lives", "parameters_only", "no_human_parameters", "not_in_httk", "not_assessed"]
+
+
+class TkContext(BaseModel):
+    """Toxicokinetic context from httk data (rule R9). Context only: never changes the verdict."""
+
+    status: TkStatus
+    compound: str | None = None
+    clint_median: float | None = None  # human intrinsic hepatic clearance, uL/min/10^6 cells
+    clint_reference: str | None = None
+    fup_median: float | None = None  # human fraction unbound in plasma
+    fup_reference: str | None = None
+    half_lives: list[HalfLife] = []
+    source: str | None = None
+    tool_ref: str | None = None
+
+
 SummaryLabel = Literal[
     "supported_positive", "supported_negative", "conflicting", "prediction_only", "insufficient"
 ]
@@ -184,6 +208,7 @@ class AnalysisResult(BaseModel):
     upstream_verdict: UpstreamVerdict | None = None
     structural_support: StructuralSupport | None = None
     regulatory: RegulatoryContext | None = None
+    toxicokinetics: TkContext | None = None
     interpretation: str | None = None
     limitations: list[str] = []
     checks: list[Check] = []
