@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -12,6 +16,9 @@ class Settings(BaseSettings):
 
     llm_api_key: str = ""
     biobricks_token: str = ""
+
+    # Reference data fetched by `python -m app.reference_data`; gitignored.
+    data_dir: Path = REPO_ROOT / "data"
 
 
 settings = Settings()

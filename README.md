@@ -78,7 +78,21 @@ ToxIndex adapter       BioBricks adapter (optional)
 1. Register at [ToxIndex Connect](https://platform.toxindex.com/connect) and create an API key.
 2. Inspect the [ToxIndex OpenAPI schema](https://platform.toxindex.com/v1/openapi.json) or tool list. Confirm real paths, authentication, supported input identifiers, and response semantics.
 3. Configure server-side secrets in a local `.env` file (never commit it).
-4. Install frontend/backend dependencies and run the app using the commands added after implementation.
+4. Download the public reference datasets. They are not committed because their licences vary. The script verifies pinned checksums and writes `data/manifest.json` with each file's source, hash and retrieval time:
+
+   ```bash
+   cd backend
+   uv sync
+   uv run python -m app.reference_data
+   ```
+
+   | Dataset | Source | Licence | Used for |
+   |---|---|---|---|
+   | MutagenLou2023 (pinned commit) | [HuggingFace](https://huggingface.co/datasets/maomlab/MutagenLou2023) | CC BY 4.0 | Measured Ames neighbours |
+   | httk 2.7.4 data tables | [CRAN](https://cran.r-project.org/package=httk) | GPL-3 | Toxicokinetic context |
+   | EMA nitrosamine acceptable intakes | [EMA](https://www.ema.europa.eu/en/documents/other/appendix-1-acceptable-intakes-established-n-nitrosamines_en.xlsx) | EMA legal notice | CPCA category and acceptable intake (revision recorded) |
+
+5. Install the frontend dependencies and run the app using the commands added after implementation.
 
 Proposed `.env.example` keys (subject to actual API requirements):
 

@@ -26,3 +26,9 @@ captures/
 
 # Windows copy metadata
 *:Zone.Identifier
+
+# Personal evaluation notes
+notes/
+
+# Downloaded reference data (licences vary; fetched at setup)
+data/
