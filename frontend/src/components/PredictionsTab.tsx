@@ -1,6 +1,7 @@
 import type { AnalysisResult, Prediction } from '../types'
 import { CallBadge } from './CallBadge'
 import { RefChip } from './RefChip'
+import { RuleChip } from './RulesGuide'
 
 const APPLICABILITY: Record<Prediction['applicability'], string> = {
   in_domain: 'In domain',
@@ -13,7 +14,7 @@ export function PredictionsTab({ result }: { result: AnalysisResult }) {
   return (
     <div className="tab-body">
       <p className="muted">
-        Model and rule-based calls. These are predictions, not measurements <span className="rule">R2</span>.
+        Model and rule-based calls. These are predictions, not measurements <RuleChip id="R2" />.
       </p>
       {predictions.length === 0 ? (
         <p className="muted">No predictions were obtained.</p>

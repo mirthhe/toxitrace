@@ -1,6 +1,7 @@
 import type { AnalysisResult, Call } from '../types'
 import { CallBadge } from './CallBadge'
 import { RefChip } from './RefChip'
+import { RuleChip } from './RulesGuide'
 
 const COLUMNS: { call: Call; label: string }[] = [
   { call: 'positive', label: 'Positive' },
@@ -39,9 +40,8 @@ export function EvidenceTab({ result }: { result: AnalysisResult }) {
   return (
     <div className="tab-body">
       <p className="muted">
-        Every source at a glance. Measurements and predictions are kept in separate groups{' '}
-        <span className="rule">R2</span>; sources that returned nothing are listed as not retrieved{' '}
-        <span className="rule">R7</span>.
+        Every source at a glance. Measurements and predictions are kept in separate groups <RuleChip id="R2" />; sources
+        that returned nothing are listed as not retrieved <RuleChip id="R7" />.
       </p>
       <div className="table-wrap">
         <table className="table matrix">

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useGoToRef } from '../navigation'
 import type { Check, Interpretation } from '../types'
 import { RefChip } from './RefChip'
+import { RuleChip } from './RulesGuide'
 
 const TRACE_REF = /^[a-z]+-\d+$/
 const RULE_ID = /^R\d+$/
@@ -73,7 +74,7 @@ export function InterpretationCard({ interpretation, checks }: { interpretation:
       <details className="interpretation-meta">
         <summary>
           {llm ? 'AI-generated, checked against the analysis' : 'Standard text'}
-          <span className="rule">R10</span>
+          <RuleChip id="R10" />
         </summary>
         <ul>
           {llm && (

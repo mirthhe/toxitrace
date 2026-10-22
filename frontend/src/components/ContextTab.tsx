@@ -1,13 +1,14 @@
 import type { AnalysisResult } from '../types'
 import { RefChip } from './RefChip'
 import { TkSection } from './TkSection'
+import { RuleChip } from './RulesGuide'
 
 export function ContextTab({ result }: { result: AnalysisResult }) {
   const reg = result.regulatory
   return (
     <div className="tab-body">
       <h3>
-        Regulatory context <span className="rule">R8</span>
+        Regulatory context <RuleChip id="R8" />
       </h3>
       {!reg ? (
         <p className="muted">Not assessed.</p>

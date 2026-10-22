@@ -9,6 +9,8 @@ import { SupportTab } from './components/SupportTab'
 import { TraceTab } from './components/TraceTab'
 import { downloadJson } from './export'
 import { TraceNavigation, type TabId } from './navigation'
+import { RulesGuideContext, useOpenRulesGuide } from './rulesGuide'
+import { RulesGuide } from './components/RulesGuide'
 import type { AnalysisResult, Health } from './types'
 
 const DEMO_LABELS: Record<string, string> = {
@@ -36,6 +38,8 @@ export default function App() {
   const [health, setHealth] = useState<Health | null>(null)
   const [input, setInput] = useState('')
   const [state, setState] = useState<State>({ kind: 'idle' })
+  const [guide, setGuide] = useState<{ open: boolean; focus: string | null }>({ open: false, focus: null })
+  const openGuide = (ruleId?: string) => setGuide({ open: true, focus: ruleId ?? null })
 
   const refreshHealth = () =>
     getHealth()
@@ -73,61 +77,121 @@ export default function App() {
   }
 
   return (
-    <div className="page">
-      <div className="hero">
-        <header className="masthead">
+    <RulesGuideContext.Provider value={openGuide}>
+      <div className="page">
+        <div className="hero">
+          <header className="masthead">
+            <div className="brand">
+              <Logo />
+              <span className="wordmark">ToxiTrace</span>
+            </div>
+            <ModeBadge health={health} onAccessCode={changeAccessCode} />
+          </header>
+
+          <section className="intro">
+            <p className="eyebrow">Ames mutagenicity · weight of evidence</p>
+            <h1>How far can a mutagenicity prediction be trusted?</h1>
+            <p className="lede">
+              ToxiTrace checks a ToxIndex prediction against independent sources and shows every call it is based on.
+            </p>
+          </section>
+
+          <form
+            className="query"
+            onSubmit={(e) => {
+              e.preventDefault()
+              run(input)
+            }}
+          >
+            <div className="query-row">
+              <input
+                aria-label="Chemical"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Chemical name, CAS number, DTXSID or SMILES"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <button type="submit" className="primary" disabled={state.kind === 'running'}>
+                {state.kind === 'running' ? 'Analysing…' : 'Analyse →'}
+              </button>
+            </div>
+            {health && (
+              <div className="demos">
+                <span>Try</span>
+                {health.demo_inputs.map((demo) => (
+                  <button type="button" key={demo} className="chip" onClick={() => run(demo)}>
+                    {DEMO_LABELS[demo] ?? demo}
+                  </button>
+                ))}
+              </div>
+            )}
+          </form>
+        </div>
+
+        {state.kind === 'error' && <div className="alert">{state.message}</div>}
+        {state.kind === 'running' && <p className="muted">Analysing {state.input}…</p>}
+        {state.kind === 'done' && <Result key={state.result.chemical_input} result={state.result} health={health} />}
+
+        <Footer />
+        {guide.open && <RulesGuide focus={guide.focus} onClose={() => setGuide({ open: false, focus: null })} />}
+      </div>
+    </RulesGuideContext.Provider>
+  )
+}
+
+function Footer() {
+  const openGuide = useOpenRulesGuide()
+  return (
+    <footer className="footer">
+      <div className="footer-grid">
+        <div className="footer-brand">
           <div className="brand">
             <Logo />
             <span className="wordmark">ToxiTrace</span>
           </div>
-          <ModeBadge health={health} onAccessCode={changeAccessCode} />
-        </header>
-
-        <section className="intro">
-          <p className="eyebrow">Ames mutagenicity · weight of evidence</p>
-          <h1>How far can a mutagenicity prediction be trusted?</h1>
-          <p className="lede">
-            ToxiTrace checks a ToxIndex prediction against independent sources and shows every call it is based on.
-          </p>
-        </section>
-
-        <form
-          className="query"
-          onSubmit={(e) => {
-            e.preventDefault()
-            run(input)
-          }}
-        >
-          <div className="query-row">
-            <input
-              aria-label="Chemical"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Chemical name, CAS number, DTXSID or SMILES"
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <button type="submit" className="primary" disabled={state.kind === 'running'}>
-              {state.kind === 'running' ? 'Analysing…' : 'Analyse →'}
-            </button>
-          </div>
-          {health && (
-            <div className="demos">
-              <span>Try</span>
-              {health.demo_inputs.map((demo) => (
-                <button type="button" key={demo} className="chip" onClick={() => run(demo)}>
-                  {DEMO_LABELS[demo] ?? demo}
-                </button>
-              ))}
-            </div>
-          )}
-        </form>
+          <p>How far can a mutagenicity prediction be trusted?</p>
+          <p className="footer-note">A research aid, not a regulatory assessment.</p>
+        </div>
+        <div>
+          <h4>Data sources</h4>
+          <ul>
+            <li>
+              <a href="https://platform.toxindex.com">ToxIndex</a> (Insilica)
+            </li>
+            <li>
+              <a href="https://pubchem.ncbi.nlm.nih.gov">PubChem</a>
+            </li>
+            <li>
+              <a href="https://huggingface.co/datasets/maomlab/MutagenLou2023">MutagenLou2023</a> (CC BY 4.0)
+            </li>
+            <li>
+              <a href="https://www.ema.europa.eu">EMA</a> nitrosamine acceptable intakes
+            </li>
+            <li>
+              <a href="https://cran.r-project.org/package=httk">httk</a> (US EPA) · structures by RDKit
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h4>Project</h4>
+          <ul>
+            <li>
+              <button type="button" className="link-button" onClick={() => openGuide()}>
+                How ToxiTrace weighs the evidence
+              </button>
+            </li>
+            <li>
+              <a href="https://github.com/mirthhe/toxitrace">Code and documentation</a>
+            </li>
+            <li>
+              <a href="https://github.com/mirthhe/toxitrace/blob/main/docs/roadmap.md">Roadmap</a>
+            </li>
+          </ul>
+        </div>
       </div>
-
-      {state.kind === 'error' && <div className="alert">{state.message}</div>}
-      {state.kind === 'running' && <p className="muted">Analysing {state.input}…</p>}
-      {state.kind === 'done' && <Result key={state.result.chemical_input} result={state.result} health={health} />}
-    </div>
+      <p className="footer-bottom">Built by Mirthe Klaassen · 2026</p>
+    </footer>
   )
 }
 

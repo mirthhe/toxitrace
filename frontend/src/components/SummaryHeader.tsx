@@ -1,6 +1,7 @@
 import { SEVERITY_ORDER, countBySeverity } from '../flags'
 import type { AnalysisResult, SummaryLabel } from '../types'
 import { Structure } from './Structure'
+import { RuleChip } from './RulesGuide'
 
 export function SummaryHeader({ result }: { result: AnalysisResult }) {
   const identity = result.identity
@@ -67,9 +68,7 @@ function Verdict({ result }: { result: AnalysisResult }) {
       <div className="verdict-title">
         {title}
         {result.summary.basis.map((r) => (
-          <span key={r} className="rule">
-            {r}
-          </span>
+          <RuleChip key={r} id={r} />
         ))}
       </div>
       <p className="verdict-text">{result.summary.text}</p>

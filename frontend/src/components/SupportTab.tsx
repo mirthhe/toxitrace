@@ -2,6 +2,7 @@ import type { AnalysisResult, Neighbour } from '../types'
 import { CallBadge } from './CallBadge'
 import { RefChip } from './RefChip'
 import { Structure } from './Structure'
+import { RuleChip } from './RulesGuide'
 
 const THRESHOLD = 0.4 // docs/plan.md §7
 
@@ -26,12 +27,11 @@ export function SupportTab({ result }: { result: AnalysisResult }) {
     <div className="tab-body">
       <p className="muted">
         Measured compounds closest to this structure in {support.dataset}, by {support.fingerprint}{' '}
-        <RefChip refId={support.tool_ref} />. Similarities below {THRESHOLD} count as low support{' '}
-        <span className="rule">R6</span>.
+        <RefChip refId={support.tool_ref} />. Similarities below {THRESHOLD} count as low support <RuleChip id="R6" />.
       </p>
 
       <h3>
-        This substance itself <span className="rule">R5</span>
+        This substance itself <RuleChip id="R5" />
       </h3>
       {support.exact_match ? (
         <p>

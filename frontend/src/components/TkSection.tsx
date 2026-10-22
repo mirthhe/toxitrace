@@ -1,5 +1,6 @@
 import type { HalfLife, TkContext } from '../types'
 import { RefChip } from './RefChip'
+import { RuleChip } from './RulesGuide'
 
 const STATUS_TEXT: Record<TkContext['status'], string> = {
   half_lives: '',
@@ -34,7 +35,7 @@ export function TkSection({ tk }: { tk: TkContext | null }) {
   return (
     <>
       <h3>
-        Toxicokinetic context <span className="rule">R9</span>
+        Toxicokinetic context <RuleChip id="R9" />
       </h3>
       {!tk ? (
         <p className="muted">Not assessed.</p>

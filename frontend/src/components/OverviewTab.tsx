@@ -2,16 +2,24 @@ import { SEVERITY_ORDER } from '../flags'
 import type { AnalysisResult, Flag, Identity } from '../types'
 import { InterpretationCard } from './InterpretationCard'
 import { RefChips } from './RefChip'
+import { RuleChip } from './RulesGuide'
+import { useOpenRulesGuide } from '../rulesGuide'
 
 export function OverviewTab({ result }: { result: AnalysisResult }) {
-  const sorted = [...result.flags].sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity))
+  const openGuide = useOpenRulesGuide()
+  const sorted = [...result.flags].sort(
+    (a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity),
+  )
   return (
     <div className="tab-body">
       {result.interpretation && <InterpretationCard interpretation={result.interpretation} checks={result.checks} />}
 
       <h3>Flags</h3>
       <p className="muted">
-        Each flag comes from one rule in <code>docs/plan.md</code> and cites the calls it is based on.
+        Each flag comes from one of ToxiTrace's ten rules and cites the calls it is based on.{' '}
+        <button type="button" className="link-button" onClick={() => openGuide()}>
+          How the rules work
+        </button>
       </p>
       {sorted.length === 0 ? <p className="muted">No flags raised.</p> : <FlagList flags={sorted} />}
 
@@ -37,7 +45,7 @@ function FlagList({ flags }: { flags: Flag[] }) {
       {flags.map((f, i) => (
         <li key={i} className={`flag flag-${f.severity}`}>
           <span className={`badge badge-${f.severity}`}>{f.severity}</span>
-          <span className="rule">{f.rule_id}</span>
+          <RuleChip id={f.rule_id} />
           <span className="flag-message">{f.message}</span>
           <RefChips refs={f.refs} />
         </li>
@@ -50,7 +58,7 @@ function IdentityDetails({ identity }: { identity: Identity }) {
   return (
     <>
       <h3>
-        Identity <span className="rule">R1</span>
+        Identity <RuleChip id="R1" />
       </h3>
       <p className="muted">
         Input read as {identity.input_type.toUpperCase()}: <code>{identity.input}</code>
