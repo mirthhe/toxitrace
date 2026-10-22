@@ -108,7 +108,7 @@ Each analysis then makes at most 3 ToxIndex calls and 1–2 PubChem calls.
 Run these from `backend/`:
 
 ```bash
-uv run pytest                   # 97 unit and API tests on recorded responses; offline, no keys
+uv run pytest                   # 103 unit and API tests on recorded responses; offline, no keys
 uv run ruff check app tests     # lint
 uv run pytest -m live           # opt-in contract tests against the live APIs (3 ToxIndex calls)
 ```
@@ -203,9 +203,28 @@ During discovery, ToxIndex outputs were compared with data obtained directly fro
 
 ### Scientific accuracy
 
-**ToxiTrace checks software behaviour and the consistency of sources. It has not independently assessed the predictive accuracy of AmesFormer or VEGA.**
+**A small independent benchmark of AmesFormer-Pro** ([method and caveats](docs/benchmark.md), [results](benchmark/results.md)).
 
-An independent benchmark was considered: compounds outside the models' training data, from the MutagenLou2023 external validation split. It turned out that this split contains only one nitrosamine, so no class-specific independent benchmark is possible with this data. ToxiTrace therefore shows per-query structural support (R6) instead of a global accuracy figure.
+**Setup:**
+- 40 compounds (20 positive, 20 negative) from the MutagenLou2023 external validation split.
+- Any compound whose skeleton also occurs in AmesFormer's stated training sources (Hansen, ISSSTY) was excluded.
+- Both classes were restricted to single small organic molecules (MW ≤ 500), so molecular size cannot separate them.
+
+**Results:**
+
+| Method | Sensitivity | Specificity | Balanced accuracy |
+|---|---|---|---|
+| AmesFormer-Pro (P ≥ 0.5) | 0.95 (95% CI 0.76–0.99) | 0.90 (0.70–0.97) | 0.93 |
+| Nearest-neighbour read-across (local baseline) | 0.70 (0.48–0.85) | 0.90 (0.70–0.97) | 0.80 |
+
+**What this shows:**
+- On this sample, AmesFormer-Pro performs well on compounds outside its stated training sources, and beats naive read-across, mainly on sensitivity.
+- **The sample is small, and the intervals overlap.**
+- The positives are *strong* Ames positives, so real-world sensitivity is likely lower.
+- Overlap with AmesFormer's third training source (EURL) could not be checked.
+- The independent pool contains almost no nitrosamines, **so the benchmark says nothing about that class.** That is why ToxiTrace shows per-query structural support (R6) rather than relying on a global accuracy figure.
+
+VEGA was not benchmarked.
 
 ## Limitations
 
@@ -267,8 +286,9 @@ An independent benchmark was considered: compounds outside the models' training 
 | `backend/app/`         | FastAPI app: adapters (ToxIndex, PubChem), identity (R1), findings, rules (R2–R9), narrative (R10), reference data, offline replay |
 | `backend/recordings/`  | Recorded real API responses (used by the tests and offline mode)                                                                   |
 | `backend/tests/`       | Unit, pipeline and API tests; `live/` holds opt-in contract tests                                                                  |
+| `benchmark/`           | Cached AmesFormer predictions and the generated benchmark report (`uv run python -m app.benchmark`)                               |
 | `frontend/src/`        | React + TypeScript UI                                                                                                              |
-| `docs/`                | [Design plan](docs/plan.md), [API discovery notes](docs/discovery-notes.md), [scientific rationale](docs/science-notes.md)         |
+| `docs/`                | [Design plan](docs/plan.md), [API discovery notes](docs/discovery-notes.md), [scientific rationale](docs/science-notes.md), [benchmark](docs/benchmark.md) |
 | [SPEC.md](SPEC.md)     | The original specification for this assignment                                                                                     |
 | [AGENTS.md](AGENTS.md) | Working agreements: API usage policy, data and licensing rules                                                                     |
 

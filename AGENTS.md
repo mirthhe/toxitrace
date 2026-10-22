@@ -48,6 +48,7 @@ ToxiTrace calls shared, hosted services: ToxIndex (authenticated, logged per API
 - **Unit tests never call the Claude API.** `tests/conftest.py` clears `LLM_API_KEY` for every test; narrative tests mock `narrative._call_llm`.
 - **Never test failure modes against a live API.** Rate limits (429), timeouts and 4xx errors are tested with recorded or synthetic responses (`respx`), never by provoking them.
 - **No exploratory loops or bulk calls.** A pipeline run makes at most 3 ToxIndex calls per query: identity, the AmesFormer prediction, and either the genotoxicity evidence (substances in DSSTox) or a direct VEGA prediction (substances outside it). Anything that would scale with dataset size (e.g. predicting for every neighbour) needs explicit approval and caching.
+- **Benchmark calls are cached.** `uv run python -m app.benchmark` calls ToxIndex only for sample compounds missing from `benchmark/amesformer_predictions.json` (committed). A re-run makes no calls; changing the seed or sample size does, and needs approval.
 - **Respect published limits.** PubChem asks clients to stay under 5 requests per second.
 - **Identify the client honestly.** ToxIndex calls send `X-ToxIndex-Agent-*` headers identifying ToxiTrace; live tests identify themselves as contract tests.
 
