@@ -237,6 +237,8 @@ VEGA was not benchmarked.
 - **Interpretation text:** written by an LLM. It is checked for grounded numbers and references, but not for every nuance of wording.
 - **Not a regulatory assessment.**
 
+What would come next, and how this could grow into a product: [docs/roadmap.md](docs/roadmap.md).
+
 ## Design decisions
 
 | Decision                                                            | Rationale                                                                                                                                                                                                          |
@@ -288,7 +290,7 @@ VEGA was not benchmarked.
 | `backend/tests/`       | Unit, pipeline and API tests; `live/` holds opt-in contract tests                                                                  |
 | `benchmark/`           | Cached AmesFormer predictions and the generated benchmark report (`uv run python -m app.benchmark`)                               |
 | `frontend/src/`        | React + TypeScript UI                                                                                                              |
-| `docs/`                | [Design plan](docs/plan.md), [API discovery notes](docs/discovery-notes.md), [scientific rationale](docs/science-notes.md), [benchmark](docs/benchmark.md) |
+| `docs/`                | [Design plan](docs/plan.md), [API discovery notes](docs/discovery-notes.md), [scientific rationale](docs/science-notes.md), [benchmark](docs/benchmark.md), [roadmap](docs/roadmap.md) |
 | [SPEC.md](SPEC.md)     | The original specification for this assignment                                                                                     |
 | [AGENTS.md](AGENTS.md) | Working agreements: API usage policy, data and licensing rules                                                                     |
 
