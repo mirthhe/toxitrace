@@ -1,6 +1,6 @@
 # ToxiTrace — Spec-Driven Development Plan
 
-**Status:** Implementation in progress. Discovery completed 2026-10-22; the agreed design is in [docs/plan.md](docs/plan.md).  
+**Status:** Completed 2026-10-22. This document is the original plan, kept as written; the evaluation table (§7) and the checklist (§10) have been updated with the outcomes. Full verification results are recorded in the [README](README.md#verification), and the design as built is in [docs/plan.md](docs/plan.md).  
 **Time budget:** approximately one working day  
 **Audience:** developer and Insilica reviewers  
 **Scope:** working vertical slice, with visible scientific provenance and limitations.
@@ -133,13 +133,13 @@ Alternative framework choices are acceptable when they reduce complexity. Note t
 
 | Scenario | Expected behavior | Execution status |
 |---|---|---|
-| Valid chemical | API prediction rendered | Not run |
-| Empty chemical input | Validation error | Not run |
-| Invalid/unsupported identifier | Error, not a fabricated result | Not run |
-| API timeout or 429 | Clear failure state | Not run |
-| Grounding check | UI values match raw API response | Not run |
-| BioBricks evidence match (optional) | Same chemical and compatible endpoint | Not run |
-| Fresh setup | Commands work as written | Not run |
+| Valid chemical | API prediction rendered | ✅ Passed: all three demo chemicals, offline and live ([README](README.md#verification)) |
+| Empty chemical input | Validation error | ✅ Passed |
+| Invalid/unsupported identifier | Error, not a fabricated result | ✅ Passed: invalid CAS rejected before lookup; unknown names return "not found" |
+| API timeout or 429 | Clear failure state | ✅ Passed (mocked responses; never provoked against the live API) |
+| Grounding check | UI values match raw API response | ✅ Passed: values asserted against recorded responses; LLM narrative checked against the trace (R10) |
+| BioBricks evidence match (optional) | Same chemical and compatible endpoint | ➖ Not built as a separate integration: datasets reached via ToxIndex kiln and the MutagenLou2023 original ([decision](docs/discovery-notes.md#biobricks-decision)) |
+| Fresh setup | Commands work as written | ✅ Passed: fresh clone from GitHub, 2026-10-22 |
 
 If no compatible independent experimental evidence can be found, state that **software behavior was checked but scientific predictive accuracy was not independently assessed**.
 
@@ -167,16 +167,16 @@ If no compatible independent experimental evidence can be found, state that **so
 
 ## 10. Completion checklist
 
-- [ ] A real ToxIndex call works.
-- [ ] User can trigger it in the app.
-- [ ] Agent tool use is visible.
-- [ ] Results identify which information is predictive vs experimentally observed.
-- [ ] At least one verification was actually performed and documented.
-- [ ] One failure case is tested.
-- [ ] README contains **tested** setup commands and explains coding agent involvement.
-- [ ] Limitations are honest; no regulatory claims.
-- [ ] No credentials are committed.
-- [ ] Repository can be shared with the reviewers.
+- [x] A real ToxIndex call works.
+- [x] User can trigger it in the app.
+- [x] Agent tool use is visible.
+- [x] Results identify which information is predictive vs experimentally observed.
+- [x] At least one verification was actually performed and documented.
+- [x] One failure case is tested.
+- [x] README contains **tested** setup commands and explains coding agent involvement.
+- [x] Limitations are honest; no regulatory claims.
+- [x] No credentials are committed.
+- [x] Repository can be shared with the reviewers.
 
 ## 11. Documentation references
 

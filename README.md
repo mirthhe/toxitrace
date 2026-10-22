@@ -187,7 +187,7 @@ Each rule is a small pure function with unit tests built from real responses. De
 | Grounding check                  | UI values match raw API responses | ✅ Values are parsed from recorded responses and asserted in the tests; the LLM narrative is checked against the trace (R10)        |
 | Failure of an independent source | Degrades, not breaks              | ✅ PubChem outage → caution flag; missing reference data → reported as not installed                                                |
 | Live API contract                | Fields still match the recordings | ✅ 2026-10-22: `pytest -m live` passed (3/3); all three demo chemicals run end to end against the live APIs. Every ToxIndex response (9 calls) was identical to its recording, so offline mode reproduces the live results exactly; all three LLM interpretations passed the grounding check |
-| Fresh setup                      | Commands work as written          | ⏳ _To be verified from a clean clone before submission_                                                                            |
+| Fresh setup                      | Commands work as written          | ✅ 2026-10-22: cloned from GitHub into an empty folder and followed the Quick start literally (no `.env`, no data). Reference data downloaded and verified in 22 s; all three examples render with the correct verdict, every tab populated, no console errors; 97 tests, lint and frontend build pass. CI is green |
 
 ### Cross-checks against original sources
 
