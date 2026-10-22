@@ -54,17 +54,6 @@ def test_empty_input_returns_422(client):
     assert client.post("/api/analyze", json={"chemical_input": ""}).status_code == 422
 
 
-def test_depict_returns_svg(client):
-    resp = client.get("/api/depict", params={"smiles": NNV_SMILES})
-    assert resp.status_code == 200
-    assert resp.headers["content-type"].startswith("image/svg+xml")
-    assert resp.text.lstrip().startswith("<?xml")
-
-
-def test_depict_rejects_unparseable_smiles(client):
-    assert client.get("/api/depict", params={"smiles": "C1CC"}).status_code == 400
-
-
 # Public deployment: access code gates live mode (app/mode.py)
 
 @pytest.fixture
@@ -120,3 +109,13 @@ def test_live_analyses_are_capped_per_hour(public, monkeypatch):
     assert codes == [200, 200, 429]
     # Public (offline) requests are never counted against the cap.
     assert public.post("/api/analyze", json={"chemical_input": "62-75-9"}).status_code == 200
+
+
+def test_backend_does_not_import_rdkit_drawing():
+    """RDKit's drawing module needs system graphics libraries missing on serverless hosts
+    (libXrender); structures are drawn in the browser with RDKit.js instead."""
+    import subprocess
+    import sys
+
+    code = "import sys, app.main; sys.exit('rdkit.Chem.Draw' in sys.modules)"
+    assert subprocess.run([sys.executable, "-c", code], check=False).returncode == 0

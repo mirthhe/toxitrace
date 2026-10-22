@@ -1123,3 +1123,15 @@ pre {
 .unlock input::placeholder {
   color: var(--on-hero-muted);
 }
+
+.neighbour > img,
+.neighbour > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+  background: var(--surface);
+  border-radius: 8px;
+}

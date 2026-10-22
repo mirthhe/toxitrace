@@ -1,5 +1,6 @@
 import { SEVERITY_ORDER, countBySeverity } from '../flags'
 import type { AnalysisResult, SummaryLabel } from '../types'
+import { Structure } from './Structure'
 
 export function SummaryHeader({ result }: { result: AnalysisResult }) {
   const identity = result.identity
@@ -10,7 +11,7 @@ export function SummaryHeader({ result }: { result: AnalysisResult }) {
     <section className="summary card">
       <div className="structure">
         {resolved && identity.smiles ? (
-          <img src={`/api/depict?smiles=${encodeURIComponent(identity.smiles)}`} alt={`Structure of ${identity.name ?? identity.smiles}`} />
+          <Structure smiles={identity.smiles} alt={`Structure of ${identity.name ?? identity.smiles}`} />
         ) : (
           <span className="muted">No structure</span>
         )}

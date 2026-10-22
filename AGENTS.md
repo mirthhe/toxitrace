@@ -51,6 +51,7 @@ Use offline mode for development and UI work. Without `TOXITRACE_OFFLINE`, every
   - `DEMO_ACCESS_CODE`;
   - `FETCH_REFERENCE_DATA_ON_DEMAND=true`;
   - optionally `LIVE_ANALYSES_PER_HOUR`.
+- **Structure drawings are rendered in the browser** with RDKit.js (`frontend/src/structure.ts`). RDKit's server-side drawing module needs system graphics libraries (`libXrender`) that Vercel's runtime lacks, so the backend must not import `rdkit.Chem.Draw`; a test enforces this.
 - **Never deploy with a ToxIndex or LLM key but without `DEMO_ACCESS_CODE`:** anyone could then spend the quota under the maintainer's name.
 
 ## External API usage policy

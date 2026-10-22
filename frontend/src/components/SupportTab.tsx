@@ -1,6 +1,7 @@
 import type { AnalysisResult, Neighbour } from '../types'
 import { CallBadge } from './CallBadge'
 import { RefChip } from './RefChip'
+import { Structure } from './Structure'
 
 const THRESHOLD = 0.4 // docs/plan.md §7
 
@@ -56,7 +57,7 @@ function NeighbourCard({ neighbour: n }: { neighbour: Neighbour }) {
   const low = n.similarity < THRESHOLD
   return (
     <figure className={`neighbour${low ? ' low' : ''}`}>
-      <img src={`/api/depict?smiles=${encodeURIComponent(n.smiles)}`} alt={n.smiles} loading="lazy" />
+      <Structure smiles={n.smiles} alt={n.smiles} width={220} height={140} />
       <figcaption>
         <div className="neighbour-sim">
           <div className="sim-track">

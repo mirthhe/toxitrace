@@ -3,7 +3,6 @@
 import re
 
 from rdkit import Chem, RDLogger
-from rdkit.Chem.Draw import rdMolDraw2D
 
 from app.schemas import InputType
 
@@ -53,17 +52,3 @@ def inchikey(smiles: str) -> str | None:
 def connectivity_block(key: str) -> str:
     """First InChIKey block: the molecular skeleton, ignoring stereo, isotopes and protonation."""
     return key.split("-")[0]
-
-
-def depict_svg(smiles: str, width: int = 260, height: int = 200) -> str | None:
-    """2D structure drawing, rendered locally (no external depiction service)."""
-    mol = parse_smiles(smiles)
-    if mol is None:
-        return None
-    drawer = rdMolDraw2D.MolDraw2DSVG(width, height)
-    options = drawer.drawOptions()
-    options.clearBackground = False
-    options.bondLineWidth = 1.5
-    drawer.DrawMolecule(mol)
-    drawer.FinishDrawing()
-    return drawer.GetDrawingText()
