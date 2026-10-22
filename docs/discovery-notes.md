@@ -62,6 +62,14 @@ Raw responses were recorded locally; trimmed copies used by the unit tests are i
 - **Input type:** a CAS number, name or SMILES. It's resolved via DSSTox; when that finds nothing, a SMILES string can be used directly for the prediction only.
 - **Rate limits:** none observed and none documented.
 
+### VEGA called directly (2026-10-22)
+
+`toxjobs_predict {tool: "vega-mutagenicity", smiles}` for N-nitroso-varenicline (1 call, recorded in `backend/recordings/toxindex/`). Response shape:
+- `output.model`: a **versioned** model id (`vega-mutagenicity-v1.2`). AmesFormer reports no version.
+- `output.predictions[]`: one entry per model (caesar, iss, sarpy, knn) with `prediction`, `assessment` (e.g. "Mutagenic (MODERATE reliability)"), `ad_index` and `reliability`.
+- Result: all 4 models "Mutagenic", moderate reliability, AD index 0.77–0.79.
+- **Compared with `tox_genotoxicity`:** its aggregated VEGA finding reduces this to "4 of 4 models reliable", without the version or the AD indices. ToxiTrace calls VEGA directly only for substances outside DSSTox, where `tox_genotoxicity` cannot be used.
+
 ### Kiln datasets and httk (2026-10-22)
 
 `kiln_list_bricks` returns 770 bricks. The relevant ones:

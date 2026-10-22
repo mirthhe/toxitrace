@@ -40,6 +40,42 @@ def from_amesformer(body: dict, ref: str) -> Prediction:
     )
 
 
+def from_vega(body: dict, ref: str) -> Prediction:
+    """toxjobs_predict(vega-mutagenicity): one entry per VEGA model (CAESAR, ISS, SarPy, kNN).
+
+    Summarised as one prediction, like tox_genotoxicity does, but keeping the model version and
+    the applicability-domain (AD) indices that the aggregated finding leaves out. Reliability
+    labels are taken from VEGA's own assessment text, not from our own AD thresholds.
+    """
+    out = body["output"]
+    models = out.get("predictions", [])
+    calls = [normalise_call(m.get("prediction")) for m in models]
+    definite = {c for c in calls if c in ("positive", "negative")}
+    call = definite.pop() if len(definite) == 1 and "unknown" not in calls else (
+        "equivocal" if len(definite) > 1 else "unknown")
+    reliabilities = {_reliability(m.get("assessment", "")) for m in models} - {None}
+    low_only = reliabilities == {"low"} or not models
+    ad = [m["ad_index"] for m in models if m.get("ad_index") is not None]
+    ad_text = f"AD index {min(ad):.2f}–{max(ad):.2f}" if ad else "no AD index reported"
+    return Prediction(
+        source=f"VEGA mutagenicity models ({out.get('model', 'version not reported')})",
+        call=call,
+        confidence=", ".join(sorted(r.capitalize() for r in reliabilities)) or None,
+        applicability="outside_domain" if low_only else "in_domain",
+        detail=f"{sum(c == call for c in calls)} of {len(models)} models {call}; {ad_text}",
+        tool_ref=ref,
+    )
+
+
+def _reliability(assessment: str) -> str | None:
+    """VEGA assessments read like "Mutagenic (MODERATE reliability)"."""
+    text = assessment.lower()
+    for level in ("high", "moderate", "low"):
+        if f"{level} reliability" in text:
+            return level
+    return None
+
+
 def _applicability(finding: dict) -> str:
     detail = (finding.get("detail") or "").lower()
     if "vega" not in finding.get("source", "").lower():

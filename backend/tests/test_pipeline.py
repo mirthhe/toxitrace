@@ -75,7 +75,12 @@ async def test_nnv_prediction_only_and_evidence_tool_not_called(offline):
     result = await agent.run_analysis(NNV_SMILES)
 
     assert result.summary.label == "prediction_only"
-    assert [e.tool for e in result.trace if e.source == "toxindex"] == ["tox_chemical_identity", "toxjobs_predict"]
+    calls = [(e.tool, e.request.get("tool")) for e in result.trace if e.source == "toxindex"]
+    assert sorted(calls, key=str) == sorted([("tox_chemical_identity", None), ("toxjobs_predict", "amesformer"),
+                                             ("toxjobs_predict", "vega-mutagenicity")], key=str)
+    vega = next(p for p in result.predictions if p.source.startswith("VEGA"))
+    assert vega.call == "positive" and vega.applicability == "in_domain"
+    assert ("R3", "info") in rules_fired(result)  # AmesFormer and VEGA agree
     assert "not in EPA DSSTox" in result.not_retrieved[0].reason
     assert result.regulatory.ema.cpca_category == "3"
     assert ("R6", "caution") in rules_fired(result)

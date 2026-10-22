@@ -93,6 +93,11 @@ async def predict_ames(smiles: str, tracer: Tracer) -> tuple[str, dict]:
     return await call_tool("toxjobs_predict", {"tool": "amesformer", "smiles": smiles}, tracer)
 
 
+async def predict_vega(smiles: str, tracer: Tracer) -> tuple[str, dict]:
+    """VEGA mutagenicity (CAESAR, ISS, SarPy, kNN) on a structure; used when DSSTox has no entry."""
+    return await call_tool("toxjobs_predict", {"tool": "vega-mutagenicity", "smiles": smiles}, tracer)
+
+
 async def genotoxicity(identifier: str, tracer: Tracer) -> tuple[str, dict]:
     """tox_genotoxicity: verdict plus findings labelled by method; 422 if not in DSSTox."""
     return await call_tool("tox_genotoxicity", {"identifier": identifier}, tracer)

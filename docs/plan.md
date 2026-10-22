@@ -60,8 +60,9 @@ Each rule produces a **flag**: `{rule_id, severity: info | caution | conflict, m
 ```text
 input (name | CAS | SMILES)
   → R1 identity: ToxIndex DSSTox + PubChem + RDKit InChIKey
-  → ToxIndex amesformer (SMILES)               ┐
-  → ToxIndex tox_genotoxicity (if in DSSTox)   ┘ in parallel
+  → ToxIndex amesformer (SMILES)                          ┐
+  → ToxIndex tox_genotoxicity (in DSSTox)                 │ in parallel
+    or toxjobs_predict vega-mutagenicity (not in DSSTox)  ┘
   → local: neighbours (MutagenLou2023), EMA lookup, httk lookup
   → rules R2–R9 → flags + overall summary
   → LLM narrative (optional; falls back to a template) → R10 grounding check

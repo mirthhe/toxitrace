@@ -60,13 +60,16 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
         result.flags, result.trace = flags, tracer.entries
         return result
 
-    # ToxIndex: the prediction needs only the structure; the evidence tool is keyed on DSSTox,
-    # so it is not called for substances outside the registry (it would return 422).
+    # ToxIndex: predictions need only the structure. The evidence tool is keyed on DSSTox (it
+    # returns 422 otherwise) and also supplies VEGA; outside DSSTox, VEGA is called directly.
+    # Either way: at most 3 ToxIndex calls per analysis.
     ames_call = _call(toxindex.predict_ames(identity.smiles, tracer))
+    vega = None
     if identity.in_dsstox:
         ames, genotox = await asyncio.gather(ames_call, _call(toxindex.genotoxicity(identity.dtxsid, tracer)))
     else:
-        ames, genotox = await ames_call, None
+        ames, vega = await asyncio.gather(ames_call, _call(toxindex.predict_vega(identity.smiles, tracer)))
+        genotox = None
 
     predictions: list[Prediction] = []
     not_retrieved: list[NotRetrieved] = []
@@ -77,6 +80,12 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
     else:
         model = findings.from_amesformer(ames[1], ames[0])
         predictions.append(model)
+
+    if isinstance(vega, toxindex.ToxIndexError):
+        not_retrieved.append(NotRetrieved(source="VEGA mutagenicity prediction",
+                                          reason=f"call failed: {vega}", tool_ref=vega.ref))
+    elif vega is not None:
+        predictions.append(findings.from_vega(vega[1], vega[0]))
 
     evidence, upstream, unclassified = [], None, []
     if genotox is None:

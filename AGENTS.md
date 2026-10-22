@@ -46,7 +46,7 @@ ToxiTrace calls shared, hosted services: ToxIndex (authenticated, logged per API
 - **Ask before any live call.** Agents must get the maintainer's explicit approval before running anything that calls an external API: scripts, the running app, or live tests. Say which calls will be made and how many.
 - **Live tests are opt-in.** `uv run pytest -m live` calls the real APIs (currently 3 ToxIndex and 3 PubChem calls per run). They are excluded from the default test run and must never run automatically, in CI, or in a loop. Run them deliberately, e.g. before a demo or when an API change is suspected.
 - **Never test failure modes against a live API.** Rate limits (429), timeouts and 4xx errors are tested with recorded or synthetic responses (`respx`), never by provoking them.
-- **No exploratory loops or bulk calls.** A pipeline run makes at most 3 ToxIndex calls per query (identity, prediction, evidence). Anything that would scale with dataset size (e.g. predicting for every neighbour) needs explicit approval and caching.
+- **No exploratory loops or bulk calls.** A pipeline run makes at most 3 ToxIndex calls per query: identity, the AmesFormer prediction, and either the genotoxicity evidence (substances in DSSTox) or a direct VEGA prediction (substances outside it). Anything that would scale with dataset size (e.g. predicting for every neighbour) needs explicit approval and caching.
 - **Respect published limits.** PubChem asks clients to stay under 5 requests per second.
 - **Identify the client honestly.** ToxIndex calls send `X-ToxIndex-Agent-*` headers identifying ToxiTrace; live tests identify themselves as contract tests.
 

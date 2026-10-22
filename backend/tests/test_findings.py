@@ -1,4 +1,4 @@
-from app.findings import from_amesformer, from_genotoxicity, normalise_call
+from app.findings import from_amesformer, from_genotoxicity, from_vega, normalise_call
 from tests.conftest import fixture
 
 
@@ -51,3 +51,23 @@ def test_normalise_call():
     assert normalise_call("Negative") == "negative"
     assert normalise_call("Equivocal") == "equivocal"
     assert normalise_call("Data unavailable") == "unknown"
+
+
+def test_vega_direct_keeps_version_and_ad_indices():
+    pred = from_vega(fixture("toxindex/vega_n-nitroso-varenicline.json"), "toxindex-3")
+
+    assert pred.source == "VEGA mutagenicity models (vega-mutagenicity-v1.2)"
+    assert pred.call == "positive"
+    assert pred.applicability == "in_domain"
+    assert pred.confidence == "Moderate"
+    assert pred.detail == "4 of 4 models positive; AD index 0.77–0.79"
+
+
+def test_vega_mixed_calls_are_equivocal_and_low_reliability_is_outside_domain():
+    body = {"output": {"model": "v", "predictions": [
+        {"prediction": "Mutagenic", "assessment": "Mutagenic (LOW reliability)", "ad_index": 0.4},
+        {"prediction": "NON-Mutagenic", "assessment": "NON-Mutagenic (LOW reliability)", "ad_index": 0.5},
+    ]}}
+    pred = from_vega(body, "toxindex-3")
+    assert pred.call == "equivocal"
+    assert pred.applicability == "outside_domain"

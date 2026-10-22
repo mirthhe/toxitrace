@@ -1,0 +1,36 @@
+{
+  "output": {
+    "model": "vega-mutagenicity-v1.2",
+    "predictions": [
+      {
+        "ad_index": 0.78988624,
+        "assessment": "Mutagenic (MODERATE reliability)",
+        "model_name": "caesar",
+        "prediction": "Mutagenic",
+        "reliability": 1.0
+      },
+      {
+        "ad_index": 0.7650950505,
+        "assessment": "Mutagenic (MODERATE reliability)",
+        "model_name": "iss",
+        "prediction": "Mutagenic",
+        "reliability": 1.0
+      },
+      {
+        "ad_index": 0.78988624,
+        "assessment": "Mutagenic (MODERATE reliability)",
+        "model_name": "sarpy",
+        "prediction": "Mutagenic",
+        "reliability": 1.0
+      },
+      {
+        "ad_index": 0.7817218570000001,
+        "assessment": "Mutagenic (MODERATE reliability)",
+        "model_name": "knn",
+        "prediction": "Mutagenic",
+        "reliability": 1.0
+      }
+    ],
+    "smiles": "O=NN1CC2CC(C1)c1cc3nccnc3cc12"
+  }
+}

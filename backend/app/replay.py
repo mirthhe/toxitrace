@@ -15,17 +15,19 @@ RECORDINGS = Path(__file__).resolve().parents[1] / "recordings"
 
 NNV_SMILES = "O=NN1CC2CC(C1)c1cc3nccnc3cc12"
 
-# (tool, identifying argument) -> recording, for POST /v1/tools/{tool}
+# (tool, identifying argument) -> recording, for POST /v1/tools/{tool}.
+# toxjobs_predict is keyed as "toxjobs_predict/<model>" because several models share it.
 TOXINDEX = {
     ("tox_chemical_identity", "62-75-9"): "toxindex/identity_ndma.json",
     ("tox_chemical_identity", "335-67-1"): "toxindex/identity_pfoa.json",
     ("tox_chemical_identity", "N-nitroso-varenicline"):
         "toxindex/identity_n-nitroso-varenicline.json",
     ("tox_chemical_identity", NNV_SMILES): "toxindex/identity_n-nitroso-varenicline_smiles.json",
-    ("toxjobs_predict", "CN(C)N=O"): "toxindex/amesformer_ndma.json",
-    ("toxjobs_predict", "OC(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F"):
+    ("toxjobs_predict/amesformer", "CN(C)N=O"): "toxindex/amesformer_ndma.json",
+    ("toxjobs_predict/amesformer", "OC(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F"):
         "toxindex/amesformer_pfoa.json",
-    ("toxjobs_predict", NNV_SMILES): "toxindex/amesformer_n-nitroso-varenicline.json",
+    ("toxjobs_predict/amesformer", NNV_SMILES): "toxindex/amesformer_n-nitroso-varenicline.json",
+    ("toxjobs_predict/vega-mutagenicity", NNV_SMILES): "toxindex/vega_n-nitroso-varenicline.json",
     ("tox_genotoxicity", "DTXSID7021029"): "toxindex/genotox_ndma.json",
     ("tox_genotoxicity", "DTXSID8031865"): "toxindex/genotox_pfoa.json",
 }
@@ -63,6 +65,8 @@ def _handle(request: httpx.Request) -> httpx.Response:
     if request.url.host == "platform.toxindex.com" and "/tools/" in path:
         tool = path.rsplit("/", 1)[-1]
         args = json.loads(request.content or b"{}")
+        if tool == "toxjobs_predict":
+            tool = f"{tool}/{args.get('tool')}"
         key = args.get("identifier") or args.get("smiles")
         if recording := TOXINDEX.get((tool, key)):
             return _recorded(recording, request)
