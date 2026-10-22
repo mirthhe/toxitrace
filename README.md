@@ -1,6 +1,6 @@
 # ToxiTrace — Scientific AI Research Assistant
 
-> **Status: planned proof of concept.** This README describes the intended demo, not completed features. Update checkboxes, setup, examples, and validation results before submitting.
+> **Status: work in progress.** Discovery is complete and the backend is being built. The agreed design is in [docs/plan.md](docs/plan.md). Sections marked as planned describe intended behaviour, not finished features.
 
 ## Purpose
 
@@ -98,8 +98,9 @@ Proposed `.env.example` keys (subject to actual API requirements):
 
 ```dotenv
 TOXINDEX_API_KEY=your-key-here
-TOXINDEX_BASE_URL=https://platform.toxindex.com
-# LLM_API_KEY=your-key-here  # only if needed
+TOXINDEX_BASE_URL=https://platform.toxindex.com/v1
+TOXINDEX_TIMEOUT_SECONDS=30
+# LLM_API_KEY=your-key-here  # optional: narrative text; a template is used without it
 ```
 
 ## Verification and limitations

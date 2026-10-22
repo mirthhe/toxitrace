@@ -1,7 +1,7 @@
-"""Constrained agent workflow (SPEC §4).
+"""Analysis pipeline (docs/plan.md §4). Implemented in step 3 of the plan.
 
-validate input -> call ToxIndex -> (optional) BioBricks -> normalize -> LLM explanation
--> grounding checks -> AnalysisResult
+identity (R1) -> ToxIndex prediction + evidence -> local reference data -> rules R2-R9
+-> optional LLM narrative -> grounding check (R10) -> AnalysisResult
 """
 
 from app.schemas import AnalysisResult, Check

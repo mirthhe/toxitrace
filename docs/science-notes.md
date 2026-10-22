@@ -1,125 +1,144 @@
-# Science notes
+# Scientific rationale
 
-My running explainer for the scientific choices in ToxiTrace, kept for interview prep. Claims marked *(own knowledge, verify)* come from background knowledge, not from an API response. Check them against primary sources before presenting them.
+The scientific background behind ToxiTrace's choices: which endpoint, which chemicals, and which rules.
+
+**How sources are marked:**
+- **Verified:** checked against a primary source or a recorded API response, which is linked.
+- **Background (unverified):** standard domain knowledge not yet checked against a primary source for this project. Treat it as context, not as a finding.
 
 ## Key concepts
 
 **Ames test (bacterial reverse mutation test, OECD TG 471).**
-- **How it works:** Salmonella (and E. coli) strains that can't make the amino acid histidine are exposed to a chemical. If the chemical causes mutations, some bacteria "revert" and can grow again. More colonies than in the control means a positive result, i.e. the chemical is mutagenic.
-- **Why it matters:** it's cheap, fast and standard, and it's the first test in almost every genotoxicity assessment (ICH M7 for pharmaceutical impurities).
+- **How it works:** histidine-dependent *Salmonella typhimurium* (and *E. coli*) strains are exposed to a chemical. A mutagen causes reversions that restore growth; a significant increase in revertant colonies over the control is a positive result.
+- **Role:** the standard first-tier genotoxicity assay, e.g. for pharmaceutical impurities under ICH M7.
 
-**S9 (metabolic activation).**
-- **What it is:** a liver extract, usually from rats, added to the test. Bacteria lack mammalian metabolism, so S9 supplies the enzymes (mainly CYP450).
-- **Why it matters:** many chemicals are only mutagenic **after** metabolism. Nitrosamines are a prime example: CYP2E1 hydroxylates them at the α-carbon, producing a reactive diazonium ion that alkylates DNA.
-- **Link to PBK:** metabolic activation is where your PBK background connects. What a body actually produces depends on enzyme kinetics, which an in vitro S9 mix only roughly approximates.
+**Metabolic activation (S9).**
+- **What it is:** bacteria lack mammalian metabolism, so the assay is run with and without S9, a liver homogenate fraction supplying CYP450 enzymes.
+- **Why it matters:** many mutagens are only active after metabolism.
+- *Background (unverified):* nitrosamines are α-hydroxylated (mainly by CYP2E1) to a diazonium ion that alkylates DNA.
+- **Link to toxicokinetics:** how much reactive metabolite forms *in vivo*, and where, depends on toxicokinetics that an in vitro S9 mix only approximates.
 
 **Ames ≠ genotoxicity ≠ carcinogenicity.**
 - **What Ames detects:** gene (point) mutations.
-- **What it misses:** chromosome breaks (clastogens) and changes in chromosome number (aneugens). Those need other assays, such as the micronucleus test.
-- **Non-genotoxic carcinogens** cause cancer without damaging DNA directly, e.g. via receptor activation or chronic inflammation. They are Ames-negative.
+- **What it doesn't detect:** clastogens (chromosome breaks) and aneugens (changes in chromosome number). Those need other assays, e.g. the micronucleus test.
+- **Non-genotoxic carcinogens** act without direct DNA damage and are Ames-negative.
+- **Consequence for ToxiTrace:** an Ames-negative result is never presented as "not genotoxic" or "not carcinogenic".
 
-**QSAR / ML prediction.**
-- **The idea:** predict a property from chemical structure alone.
-- **Limits:**
-  - **Training data:** the model is only as good as its training data.
-  - **Applicability domain:** it's only reliable for chemicals similar to those it was trained on.
-  - **Overlap with evidence:** if a test chemical was in the training set, agreement with lab data is expected and proves little.
+**QSAR / ML predictions and their limits.**
+- **The idea:** a model predicts an endpoint from structure alone.
+- **Applicability domain:** it is only reliable for chemicals resembling its training data.
+- **Overlap with evidence:** when the query chemical was in the training set, agreement with experimental data is expected and does not show predictive accuracy.
 
-## Identity resolution findings (ToxIndex `tox_chemical_identity`, 2026-10-21)
+## Why Ames, and why these three chemicals
 
-| Query | Result |
-|---|---|
-| `62-75-9` (CAS) | 1 match: N-Nitrosodimethylamine (NDMA), DTXSID7021029, SMILES `CN(C)N=O` |
-| `335-67-1` (CAS) | 1 match: Perfluorooctanoic acid (PFOA), DTXSID8031865 |
-| `N-nitroso-varenicline` (name) | 0 matches |
-| `O=NN1CC2CC(C1)c1cc3nccnc3cc12` (SMILES) | 0 matches |
+- **Why Ames:** the endpoint is binary, has extensive public experimental data, and is central to regulatory practice.
+- **The three demo chemicals:** each represents a different evidence situation, which together exercise all of ToxiTrace's rules.
 
-- **Where the N-nitroso-varenicline SMILES came from:** varenicline's SMILES with a nitroso group (N=O) added to its secondary amine. Checked locally with RDKit: formula C13H12N4O, InChIKey PTBAEGOZXFWTJH-UHFFFAOYSA-N.
-- **What the 0 matches mean:** N-nitroso-varenicline is **not in EPA DSSTox**. That is typical for NDSRIs, which are new impurities with little regulatory data. The app should treat "not in registry" as a meaningful, displayed fact, not as an error.
+| Chemical | Evidence situation | Rules it exercises |
+|---|---|---|
+| N-nitrosodimethylamine (NDMA, CAS 62-75-9) | Data-rich; model and evidence agree, but the compound is in the training data | R5 independence, R8 nitrosamine context |
+| Perfluorooctanoic acid (PFOA, CAS 335-67-1) | No experimental Ames data retrieved; predictions conflict; measured analogues exist | R2, R3, R4, R6, R7, R9 |
+| N-nitroso-varenicline (CAS 2755871-02-2) | Not in EPA DSSTox; no evidence retrievable; the prediction is the only signal | R1, R6, R7, R8 |
 
-## What the first real calls showed (2026-10-21)
+## Observations from the recorded API responses (2026-10-21)
 
-See `docs/discovery-notes.md` for the raw numbers.
+Response shapes and raw values are in [discovery-notes.md](discovery-notes.md).
 
-**NDMA: data-rich, and everything agrees. That agreement is circular.**
-- **The results:** AmesFormer gives P = 0.998. The curated ISSSTY data is Ames-positive, and the evidence tool literally says NDMA "carries a measured Ames value in the VEGA training set".
-- **Why that proves little:** the model has most likely seen this compound during training, so the agreement is expected. It doesn't show the model is accurate.
-- **The in vivo result:** the micronucleus test is **Equivocal**, so the overall GHS verdict is "Not classifiable" even though it is clearly Ames-positive. Possible explanation *(own knowledge, verify)*:
-  - NDMA is activated mainly in the liver (CYP2E1), with high first-pass extraction;
-  - a bone-marrow micronucleus test samples a tissue that may see little of the reactive metabolite;
-  - that is a kinetics question, i.e. a PBK question.
+### NDMA: model and evidence agree, but not independently
 
-**PFOA: evidence exists in the world but was not retrieved, and the predictions disagree.**
-- **What's missing:** no experimental Ames data was retrieved. All four experimental sources are listed under `gaps`.
-- **The predictions disagree:**
-  - AmesFormer says non-mutagenic with P = 0.0006;
-  - VEGA: none of its 4 models considered PFOA within its reliable domain;
-  - one structural alert fires positive, with low confidence.
-- **The tool's verdict:** "In vitro genotoxicant", based on that single low-confidence alert, with `conflicts: []`.
-- **The published picture** *(own knowledge, verify)*: PFOA is generally reported as Ames-negative.
-- **Lessons for the app:**
-  - "not retrieved" must be displayed as different from "doesn't exist";
-  - disagreement between predictors must be shown, not averaged away;
-  - an aggregate verdict should never be shown without the findings underneath it.
+- **AmesFormer-Pro:** P(Ames+) = 0.998.
+- **Evidence:** the ISSSTY curated call is Positive, and `tox_genotoxicity` reports the compound "carries a measured Ames value in the VEGA training set".
+- **Training data:** NDMA is also in the MutagenLou2023 training split (verified locally by InChIKey).
+- **Why this matters:** AmesFormer's stated training sources (Hansen, ISSSTY, EURL) overlap with these, so the agreement is expected and is not evidence of predictive accuracy.
+- **In vivo:** the in vivo micronucleus result is **Equivocal**, so the GHS germ cell mutagenicity verdict is "Not classifiable" despite clear Ames positivity.
+  - *Background (unverified):* a plausible explanation is toxicokinetic. NDMA is activated mainly in the liver, with high first-pass extraction, so bone marrow (the usual micronucleus target tissue) may see little reactive metabolite.
 
-**N-nitroso-varenicline: the real use case for a prediction.**
-- **Results:** AmesFormer gives P = 0.951. The chemical is not in DSSTox, so the evidence tool returns 422 and no evidence can be retrieved.
-- **Why it matters:** this is the situation where predictions actually matter, because there is nothing else.
-- **The app should say so plainly:** single model, structure entered by the user (not taken from a registry), no evidence retrieved, and an applicability domain we can't verify.
-- *(own knowledge, verify)*: nitrosamines with this structure are exactly why the 2023 CPCA approach exists.
+### PFOA: conflicting predictions, no experimental data retrieved
 
-## Comparison with ToxIndex's own chat agent (2026-10-21)
+- **AmesFormer-Pro:** P(Ames+) = 0.0006, non-mutagenic.
+- **VEGA:** none of its 4 models met its reliability threshold, so PFOA is outside their applicability domain.
+- **Structural alerts:** one alert fires positive (score 0.45, low confidence).
+- **`tox_genotoxicity`:**
+  - verdict "In vitro genotoxicant", basis `predicted`, confidence Low, resting on that single alert;
+  - `conflicts: []`;
+  - all four experimental sources are listed under `gaps`.
+- **Measured analogues:** the nearest measured analogues in MutagenLou2023 (independent download, local RDKit) are all Ames-negative, among them perfluorodecanoic acid, perfluoroheptane and chlorofluoro carboxylic acids.
+- **Consequences for the rules:**
+  - predictor disagreement is shown, not averaged (R3);
+  - a model declining to predict is a signal (R4);
+  - a prediction-based verdict is never presented as a hazard conclusion (R2);
+  - "not retrieved" is distinct from "does not exist" (R7).
 
-**The question:** "Is PFOA mutagenic in the Ames test?", asked in the ToxIndex web app.
+### N-nitroso-varenicline: prediction only
 
-**What the agent did, and did well:**
-- It resolved PFOA to two forms: the free acid, DTXSID8031865, and the anion, DTXSID40892486.
-- It found no experimental Ames data in ISSSTY, Hansen, MutagenLou2023 or EFSA.
-- It did a read-across: four perfluorinated analogues, including C10 PFDA, are Ames-negative.
-- It noticed that the predictions conflict.
-- It explained that the positive structural alert ("alkyl halide, SN2 alkylating agent") misfires on C–F bonds, which are not SN2 electrophiles.
-- It noted that `tox_genotoxicity` promotes that single alert to "bacterial reverse mutation: Positive" and then to "genotoxic carcinogen", and said this chain should not be trusted.
-- Conclusion: "unresolved from curated data, more consistent with Ames-negative".
+- **AmesFormer-Pro:** P(Ames+) = 0.951.
+- **Registry:** the substance is not in EPA DSSTox, so `tox_genotoxicity` returns 422.
+- **Measured structural neighbours:** the closest measured compound in MutagenLou2023 has Tanimoto similarity 0.32 (Morgan radius 2), so there is no close measured analogue.
+- **Regulatory status:** EMA lists the substance with **CPCA category 3** and an **acceptable intake of 400 ng/day** (EMA/CHMP/219920/2026 Rev. 14). Verified against the EMA file.
 
-**What this means for ToxiTrace's positioning:**
-- The *chat agent* already does this weight-of-evidence reasoning, and does it well. The *structured tool output* (`tox_genotoxicity`, which pipelines and API users consume) does not: verdict "In vitro genotoxicant", `conflicts: []`.
-- The agent's reasoning is LLM prose. It caught the problem this time, but nothing guarantees it will every time, and it can't be tested.
-- **ToxiTrace's angle:** turn that reasoning into **deterministic, testable rules in code** that produce a structured result. The LLM only explains a verdict that the code has already computed.
-- **How to put it in the interview:** "your agent caught it in prose; your structured output didn't; ToxiTrace makes catching it a guaranteed, testable check."
+## ToxIndex chat agent vs structured tool output (2026-10-21)
 
-**Verified discrepancy:** the agent cited PFOA as **IARC Group 2B**. IARC Monographs Vol. 135 (Working Group, Lyon, 7–14 Nov 2023) classified PFOA as **Group 1**, carcinogenic to humans. The basis was sufficient evidence in experimental animals plus strong mechanistic evidence, with limited evidence in humans (testis and kidney cancer). PFOS was classified as 2B. The platform's carcinogenicity data appears stale, or it mixed up PFOA and PFOS. Sources: [IARC news](https://www.iarc.who.int/news-events/iarc-monographs-evaluate-the-carcinogenicity-of-perfluorooctanoic-acid-pfoa-and-perfluorooctanesulfonic-acid-pfos/), [Vol. 135](https://publications.iarc.who.int/Book-And-Report-Series/Iarc-Monographs-On-The-Identification-Of-Carcinogenic-Hazards-To-Humans/Perfluorooctanoic-Acid-PFOA-And-Perfluorooctanesulfonic-Acid-PFOS--2025).
+**The question:** "Is PFOA mutagenic in the Ames test?", asked in the ToxIndex web chat.
 
-## Toxicokinetics: PFOA in httk (CRAN httk 2.7.4, verified locally)
+**What the agent did:**
+- resolved two forms (free acid DTXSID8031865, anion DTXSID40892486);
+- found no curated Ames data for PFOA;
+- performed a read-across to Ames-negative perfluorinated analogues;
+- identified the structural-alert positive as an "alkyl halide (SN2)" rule misfiring on C–F bonds;
+- noted that `tox_genotoxicity` builds a "genotoxic carcinogen" statement on that alert alone.
+- Its conclusion was "unresolved from curated data, more consistent with Ames-negative".
 
-The `pfas.clearance` table gives measured PFOA half-lives:
+**How that compares with the structured tool output:** the chat agent reasons well, but in free text. The structured output that pipelines consume reports "In vitro genotoxicant" with no conflicts.
+
+**ToxiTrace's design follows from this:** the same checks are encoded as deterministic rules with unit tests. An LLM only narrates a verdict that the code has already computed.
+
+**PFOA's IARC classification:**
+- The chat agent cited PFOA as **IARC Group 2B**.
+- IARC Monographs Vol. 135 (Working Group, Lyon, 7–14 November 2023) classified PFOA as **Group 1**, carcinogenic to humans. The basis was sufficient evidence in experimental animals and strong mechanistic evidence, with limited evidence in humans (testicular and renal cell cancer).
+- PFOS was classified as Group 2B.
+- Verified: [IARC announcement](https://www.iarc.who.int/news-events/iarc-monographs-evaluate-the-carcinogenicity-of-perfluorooctanoic-acid-pfoa-and-perfluorooctanesulfonic-acid-pfos/), [Vol. 135](https://publications.iarc.who.int/Book-And-Report-Series/Iarc-Monographs-On-The-Identification-Of-Carcinogenic-Hazards-To-Humans/Perfluorooctanoic-Acid-PFOA-And-Perfluorooctanesulfonic-Acid-PFOS--2025).
+- PFOA's Group 1 classification is not based on genotoxicity, which illustrates why Ames-negative ≠ non-carcinogenic.
+
+## Toxicokinetic context: PFOA (httk 2.7.4, verified locally)
+
+Measured half-lives from httk's `pfas.clearance` table (CRAN httk 2.7.4):
 
 | Species | Female | Male |
 |---|---|---|
 | Human | 20,150 h (~2.3 years) | 22,340 h (~2.5 years) |
 | Monkey | 782 h | 492 h |
-| Rat | **2.8 h** | **236 h** |
+| Rat | 2.8 h | 236 h |
 | Mouse | 374 h | 521 h |
 
-**Why this table matters:**
-- **Across species, half-lives differ by four orders of magnitude.** Female vs male rats alone differ by a factor of about 80. *(Own knowledge, verify:)* this is attributed to sex-hormone-regulated renal transporters (OATs) that reabsorb PFOA in male rats.
-- **Animal data doesn't transfer directly to humans.** A rat study cannot be extrapolated to humans without a TK model that includes this mechanism.
-- **The same lesson as for the Ames models:** every model, including a TK model, has an applicability domain.
-- **httk handles PFAS separately.** In the in vitro table, human Clint = 0 (no hepatic metabolism) and fup ≈ 0.002 (over 99.8% bound to plasma protein). The generic IVIVE route would predict elimination from these parameters, which is why httk ships a dedicated PFAS clearance table.
+**What the table shows:**
+- **Spread:** half-lives span about four orders of magnitude across species, and about 80× between female and male rats.
+  - *Background (unverified):* the rat sex difference is attributed to hormone-regulated renal organic anion transporters that reabsorb PFOA in males.
+- **Why httk has a separate PFAS table:** httk lists human Clint = 0 (Crizer 2024) and fraction unbound in plasma ≈ 0.002 (Smeltz 2023) for PFOA. Elimination is therefore dominated by renal handling that the generic in vitro-to-in vivo route does not capture, which is why httk ships the dedicated table.
+- **For ToxiTrace:** toxicokinetic models have applicability domains too. Rule R9 shows TK context where data exists and states plainly when it does not.
 
-## Candidate case: nitrosamines
+**Why PBK is not coupled to Ames directly:**
+- Ames is qualitative, so it provides no in vitro effect concentration for in vitro-to-in vivo extrapolation (IVIVE).
+- httk models the parent compound, not reactive metabolites.
+- A meaningful coupling would need:
+  - a metabolite-aware PBK model;
+  - target-tissue dosimetry;
+  - a quantitative genotoxicity endpoint, e.g. in vitro micronucleus benchmark doses.
+- This is future work.
 
-*(own knowledge, verify)*
-- **2018, valsartan:** recalled because of NDMA contamination.
-- **2021, Chantix (varenicline):** recalled because of N-nitroso-varenicline. This was an NDSRI (nitrosamine drug substance-related impurity), formed from the drug molecule itself.
-- **ICH M7:** names N-nitroso compounds a "cohort of concern", meaning they are so potent that the default acceptable intake limits do not apply.
-- **2023, FDA and EMA:**
-  - introduced the Carcinogenic Potency Categorization Approach (CPCA), which puts a nitrosamine into a potency category based on its structural features;
-  - recommended an "enhanced Ames test" (more S9, hamster S9, pre-incubation), because the standard Ames test can miss some nitrosamines.
+## Regulatory background: nitrosamines
 
-## Candidate case: PFOA
+**Verified (EMA Appendix 1, Rev. 14):**
+- NDMA has an acceptable intake of 96 ng/day, derived from the harmonic mean TD50 in the Carcinogenic Potency Database.
+- N-nitroso-varenicline is in CPCA category 3, at 400 ng/day.
 
-*(own knowledge, verify)*
-- **Who and where:** a PFAS chemical, relevant in NL (Chemours Dordrecht).
-- **Classification:** IARC classified PFOA as carcinogenic to humans (Group 1) in 2023.
-- **Mechanism:** generally regarded as non-genotoxic. Typically Ames-negative; the proposed mechanisms include receptor-mediated effects (e.g. PPARα), immune effects and epigenetic effects.
-- **Why it's interesting for ToxiTrace:** "Ames-negative" here does **not** mean "safe". Also, highly fluorinated chemicals are probably underrepresented in Ames training data, so it's an applicability domain question.
+**Background (unverified; check against FDA/EMA guidance before relying on it):**
+- **ICH M7 cohort of concern:** ICH M7 designates N-nitroso compounds a "cohort of concern", to which the default threshold of toxicological concern does not apply.
+- **2018 and 2021 recalls:** NDMA contamination led to sartan recalls in 2018, and N-nitroso-varenicline led to varenicline recalls in 2021. The latter is an NDSRI: a nitrosamine drug substance-related impurity.
+- **CPCA:** in 2023 FDA and EMA introduced the Carcinogenic Potency Categorization Approach, which assigns potency categories from structural features.
+- **Enhanced Ames test:** FDA and EMA recommend an enhanced Ames protocol for nitrosamines (higher S9 concentration, hamster S9, pre-incubation), because the standard protocol can under-detect them.
+
+## Background: PFOA mechanism
+
+*Background (unverified):*
+- **Mechanism:** PFOA is generally regarded as non-genotoxic. Proposed carcinogenic mechanisms include receptor-mediated effects (e.g. PPARα), immunosuppression and epigenetic changes.
+- **Applicability domain:** highly fluorinated chemicals are likely underrepresented in Ames training data. That is consistent with VEGA declining to predict, but not verified for AmesFormer.

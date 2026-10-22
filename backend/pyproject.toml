@@ -13,10 +13,12 @@ dependencies = [
     "pandas>=3.0.6",
     "openpyxl>=3.1.5",
     "rdata>=1.1.0",
+    "rdkit>=2026.9.1",
 ]
 
 [dependency-groups]
 dev = [
+    "anyio>=4.15.1",
     "pytest>=8",
     "respx>=0.21",
     "ruff>=0.6",
@@ -24,6 +26,10 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Live tests call the real ToxIndex and PubChem APIs. They never run by default:
+# run them deliberately with `uv run pytest -m live` (see AGENTS.md).
+addopts = "-m 'not live'"
+markers = ["live: calls the real ToxIndex/PubChem APIs; opt-in with -m live"]
 
 [tool.ruff]
 line-length = 100

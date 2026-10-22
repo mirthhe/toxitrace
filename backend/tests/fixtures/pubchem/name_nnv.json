@@ -1,0 +1,20 @@
+{
+  "PropertyTable": {
+    "Properties": [
+      {
+        "CID": 163880833,
+        "MolecularFormula": "C13H12N4O",
+        "SMILES": "C1C2CN(CC1C3=CC4=NC=CN=C4C=C23)N=O",
+        "InChIKey": "PTBAEGOZXFWTJH-UHFFFAOYSA-N",
+        "IUPACName": "14-nitroso-5,8,14-triazatetracyclo[10.3.1.02,11.04,9]hexadeca-2,4,6,8,10-pentaene"
+      },
+      {
+        "CID": 167366008,
+        "MolecularFormula": "C13H12N4O",
+        "SMILES": "C1[C@@H]2CN(C[C@H]1C3=CC4=NC=CN=C4C=C23)N=O",
+        "InChIKey": "PTBAEGOZXFWTJH-DTORHVGOSA-N",
+        "IUPACName": "(1S,12R)-14-nitroso-5,8,14-triazatetracyclo[10.3.1.02,11.04,9]hexadeca-2,4,6,8,10-pentaene"
+      }
+    ]
+  }
+}

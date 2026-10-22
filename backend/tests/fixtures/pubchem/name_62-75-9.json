@@ -1,0 +1,13 @@
+{
+  "PropertyTable": {
+    "Properties": [
+      {
+        "CID": 6124,
+        "MolecularFormula": "C2H6N2O",
+        "SMILES": "CN(C)N=O",
+        "InChIKey": "UMFJAHHVKNCGLG-UHFFFAOYSA-N",
+        "IUPACName": "N,N-dimethylnitrous amide"
+      }
+    ]
+  }
+}

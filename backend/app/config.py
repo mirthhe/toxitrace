@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     toxindex_timeout_seconds: float = 30.0
 
     llm_api_key: str = ""
-    biobricks_token: str = ""
 
     # Reference data fetched by `python -m app.reference_data`; gitignored.
     data_dir: Path = REPO_ROOT / "data"

@@ -1,6 +1,6 @@
 # ToxiTrace — Spec-Driven Development Plan
 
-**Status:** Draft, pre-implementation  
+**Status:** Implementation in progress. Discovery completed 2026-10-22; the agreed design is in [docs/plan.md](docs/plan.md).  
 **Time budget:** approximately one working day  
 **Audience:** developer and Insilica reviewers  
 **Scope:** working vertical slice, with visible scientific provenance and limitations.
@@ -19,17 +19,17 @@ Scientific users investigating chemical safety need more than a model score. The
 
 Timebox: 45–60 minutes.
 
-1. Create a ToxIndex API key using Tom's supplied instructions.
+1. Create a ToxIndex API key using the supplied instructions.
 2. Inspect the **actual** OpenAPI schema or MCP tool list.
 3. Choose **one** working model endpoint, input type, and sample chemical.
 4. Make a real call; note response schema, units, score semantics, model identifier, error conditions, and available provenance.
 5. Choose a specific question the endpoint can answer without overstating results.
 
-**Do not invent endpoint paths or schema fields.** The specification URL was not retrievable in this drafting environment. Confirm all details with the authenticated service.
+**Do not invent endpoint paths or schema fields.** Confirm all details against the authenticated service. Outcome: [docs/discovery-notes.md](docs/discovery-notes.md).
 
 Optional BioBricks feasibility gate: locate a small compatible dataset and inspect its schema; only implement if chemical identity and endpoint matching are defensible. The BioBricks quickstart describes configuration with a token and installable datasets backed by Parquet files.
 
-Sysrev: not part of the MVP. The published API documentation says API key access requires a Premium or Enterprise license; public exports may be considered later.
+Sysrev: not part of the MVP. ToxIndex exposes Sysrev endpoints (`/v1/sysrev/*`); these were not explored in this project.
 
 ## 3. Functional requirements and acceptance tests
 
@@ -176,7 +176,7 @@ If no compatible independent experimental evidence can be found, state that **so
 - [ ] README contains **tested** setup commands and explains coding agent involvement.
 - [ ] Limitations are honest; no regulatory claims.
 - [ ] No credentials are committed.
-- [ ] Repository can be shared with Tom and Manjot.
+- [ ] Repository can be shared with the reviewers.
 
 ## 11. Documentation references
 

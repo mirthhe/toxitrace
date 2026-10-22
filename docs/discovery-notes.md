@@ -1,6 +1,6 @@
-# Discovery notes (SPEC §2)
+# API discovery notes (SPEC §2)
 
-Fill in from the real, authenticated API. No guessed fields.
+What the ToxIndex API and the independent sources actually returned during discovery (21–22 October 2026). Every statement here is based on a recorded response or a downloaded original file; nothing is inferred from documentation alone unless stated.
 
 ## ToxIndex
 
@@ -15,7 +15,7 @@ Source: `GET https://platform.toxindex.com/v1/openapi.json` (2026-10-21), ToxInd
   - `/sysrev/*`: Sysrev projects, documents, reviews and exports.
   - `/agent/*`: ToxIndex's own conversations, plus `GET /agent/{conversation}/tool/{toolCallId}` for tool-call provenance.
   - `GET /whoami`: identity check for the credential.
-- **Agent attribution headers:** `POST /tools/{name}` accepts the `X-ToxIndex-Agent-Name`, `-Model`, `-Harness` and `-Host` headers. The `sysrev_*` tools require them. Sending them would label our calls honestly in ToxIndex's logs.
+- **Agent attribution headers:** `POST /tools/{name}` accepts the `X-ToxIndex-Agent-Name`, `-Model`, `-Harness` and `-Host` headers. The `sysrev_*` tools require them. ToxiTrace sends them so its calls are identifiable in ToxIndex's logs.
 - **Not in the spec:** rate limits (no 429 is documented) and timeouts.
 
 ### Tool catalogs (`GET /tools`, `GET /toxjobs/tool`, 2026-10-21)
@@ -36,7 +36,7 @@ Source: `GET https://platform.toxindex.com/v1/openapi.json` (2026-10-21), ToxInd
 
 ### First real calls (2026-10-21)
 
-Raw responses are in `captures/` (gitignored). All calls were sent through `POST /v1/tools/{name}` with the `X-ToxIndex-Agent-*` headers. Each took about 1 second or less.
+Raw responses were recorded locally; trimmed copies used by the unit tests are in `backend/tests/fixtures/toxindex/`. All calls were sent through `POST /v1/tools/{name}` with the `X-ToxIndex-Agent-*` headers. Each took about 1 second or less.
 
 **`toxjobs_predict {tool: "amesformer", smiles}`.** Response shape:
 ```json
@@ -62,7 +62,7 @@ Raw responses are in `captures/` (gitignored). All calls were sent through `POST
 - **Input type:** a CAS number, name or SMILES. It's resolved via DSSTox; when that finds nothing, a SMILES string can be used directly for the prediction only.
 - **Rate limits:** none observed and none documented.
 
-### Kiln datasets for option A, and httk for option B (2026-10-22)
+### Kiln datasets and httk (2026-10-22)
 
 `kiln_list_bricks` returns 770 bricks. The relevant ones:
 
@@ -74,8 +74,8 @@ Raw responses are in `captures/` (gitignored). All calls were sent through `POST
 | `ema-nitrosamine-ai` | 252 N-nitroso compounds with EMA acceptable intakes (ng/day) and source drug | EMA legal notice |
 | `ccris`, `iss-micronucleus`, `efsa-pesticide-genotoxicity`, `echa-mamtkdb`, `oecd-pfas-list`, `pfas-tox` | possibly useful later | — |
 
-- **Independence for option A:** AmesFormer's stated training sources are Hansen, ISSSTY and EURL. The MutagenLou2023 external validation split (DrugBank, DGM/NIHS) is a candidate **independent** benchmark. Overlap still needs checking by structure (InChIKey), since DrugBank compounds can also appear in Hansen or ISSSTY.
-- **Licensing:** Hansen and ISSSTY have no licence granted. **Never commit extracts of them to the public repo.** Query them live only. MutagenLou2023 (CC BY 4.0) may be redistributed with attribution.
+- **Independence (rules R5/R6):** AmesFormer's stated training sources are Hansen, ISSSTY and EURL. The MutagenLou2023 external validation split (DrugBank, DGM/NIHS) is a candidate **independent** benchmark. Overlap still needs checking by structure (InChIKey), since DrugBank compounds can also appear in Hansen or ISSSTY.
+- **Licensing:** Hansen and ISSSTY have no licence granted. Extracts of them are never committed to this repository. MutagenLou2023 (CC BY 4.0) may be redistributed with attribution.
 
 **httk via `toxjobs_predict {tool: "httk", input: {chemicals: <CAS>}}`:**
 - NDMA (62-75-9) and PFOA (335-67-1) both returned HTTP 200 with `{"output": [{"available": false, "error": "Chemical name not found ..."}]}`.
@@ -84,12 +84,12 @@ Raw responses are in `captures/` (gitignored). All calls were sent through `POST
 
 ## Independent verification against original sources (2026-10-22)
 
-Downloads are in `captures/external/` (gitignored). The analysis ran locally with RDKit, pandas and rdata; no ToxIndex calls were made for this section.
+The files were downloaded directly from each publisher (reproducible with `uv run python -m app.reference_data`; pinned versions and checksums are recorded in `data/manifest.json`). The analysis ran locally with RDKit, pandas and rdata; no ToxIndex calls were made for this section.
 
 | What | Original source | Result | Agrees with ToxIndex? |
 |---|---|---|---|
 | MutagenLou2023 | HuggingFace `maomlab/MutagenLou2023` (CC BY 4.0) | train 6,862 / test 1,714 / validation 1,469 = 10,045 rows. Validation = 805 DrugBank approved drugs + 664 strong Ames positives from DGM/NIHS, none in the original training set | ✅ same row count as the kiln copy |
-| N-nitroso-varenicline structure | PubChem PUG REST | CID 163880833, InChIKey `PTBAEGOZXFWTJH-UHFFFAOYSA-N`, same as our RDKit-constructed SMILES | n/a (not in DSSTox) |
+| N-nitroso-varenicline structure | PubChem PUG REST | CID 163880833, InChIKey `PTBAEGOZXFWTJH-UHFFFAOYSA-N`, identical to the SMILES constructed from varenicline and checked with RDKit | n/a (not in DSSTox) |
 | N-nitroso-varenicline regulatory status | EMA Appendix 1 xlsx (EMA/CHMP/219920/2026 Rev. 14, dated 2026-10-01) | CAS 2755871-02-2, **CPCA category 3, AI 400 ng/day**, source drug varenicline | not checked against `ema-nitrosamine-ai` brick yet |
 | NDMA regulatory status | same EMA file | **AI 96 ng/day**, based on the harmonic mean TD50 (CPDB) | — |
 | httk coverage | CRAN `httk` 2.7.4 (Tables.RData stamped 2025-12-04) | `chem.physical_and_invitro.data` has **18,476 chemicals**, not ~553. NDMA is present but has **no human in vitro TK parameters**. PFOA is present with Clint 0 (Crizer 2024), fup ≈ 0.002 (Smeltz 2023), and in the `pfas.clearance` table | ❌ the ToxIndex httk tool returned "not found" for both. Its description says ~553 chemicals, so it is probably an older httk or a lookup-by-name issue |
@@ -104,14 +104,10 @@ Downloads are in `captures/external/` (gitignored). The analysis ran locally wit
   - PFDA has Tanimoto **1.0** to PFOA. That's a fingerprint collision: Morgan radius 2 cannot distinguish chain length.
   - Lesson: similarity 1.0 ≠ same molecule, so always confirm identity with InChIKey.
 - **N-nitroso-varenicline:** the nearest neighbour has Tanimoto **0.32** (small cyclic nitrosamines). There is no structurally close measured compound in this dataset.
-- **Consequence for option A:** the independent validation split contains almost no nitrosamines. A per-class "independent" benchmark for nitrosamines isn't possible with this data. A neighbour-based "how much support does this prediction have?" view is possible.
+- **Consequence for the design:** the independent validation split contains almost no nitrosamines, so a per-class independent benchmark for nitrosamines is not possible with this data. ToxiTrace therefore shows measured structural neighbours per query (rule R6) instead of a class-level accuracy figure.
 
-## BioBricks (optional)
+## BioBricks (decision)
 
-Possibly reachable through `/kiln/brick` instead of a separate BioBricks client. Still to check.
-
-- Dataset:
-- Schema:
-- Chemical identity match possible?
-- Compatible endpoint?
-- Decision (include / drop, and why):
+- **What we checked:** the BioBricks datasets relevant to this project (Hansen, ISSSTY, MutagenLou2023, ISSMIC and others) are reachable through ToxIndex's kiln endpoints, and MutagenLou2023 is also published directly on HuggingFace.
+- **Decision:** ToxiTrace does not use a separate BioBricks client. Measured neighbour data comes from the MutagenLou2023 original (CC BY 4.0), and curated evidence comes from `tox_genotoxicity`.
+- **Why:** this avoids a second integration and the licensing questions around the Hansen and ISSSTY extracts.
