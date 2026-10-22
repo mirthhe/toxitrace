@@ -8,6 +8,10 @@ ToxiTrace builds on ToxIndex; it does not replace it. ToxIndex's chat agent reas
 
 Built as a time-boxed technical assignment for Insilica. Not production software, and not a regulatory assessment.
 
+**Try it:** **[toxitrace.vercel.app](https://toxitrace.vercel.app)**
+- **Public visitors** get the demo mode: the three example chemicals replayed from recorded real API responses, with no API calls.
+- **Live mode** (any chemical, live ToxIndex calls and the LLM interpretation) needs an access code, available on request.
+
 ![ToxiTrace analysing PFOA: conflicting predictions, with the computed verdict and a grounded interpretation](docs/screenshot.png)
 
 ## Contents
