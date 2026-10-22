@@ -1,21 +1,25 @@
-"""Analysis pipeline (docs/plan.md §4). Implemented in step 3 of the plan.
+"""Analysis pipeline (docs/plan.md §4).
 
 identity (R1) -> ToxIndex prediction + evidence -> local reference data -> rules R2-R9
 -> optional LLM narrative -> grounding check (R10) -> AnalysisResult
+
+Implemented so far: identity (R1). Later steps are added rule by rule.
 """
 
-from app.schemas import AnalysisResult, Check
+from app.identity import resolve_identity
+from app.schemas import AnalysisResult
+from app.trace import Tracer
+
+ENDPOINT = "ames_mutagenicity"
 
 
 async def run_analysis(chemical_input: str) -> AnalysisResult:
-    raise NotImplementedError
-
-
-def check_value_grounding(result: AnalysisResult) -> Check:
-    """Each prediction's raw_value must equal the value in the referenced trace entry."""
-    raise NotImplementedError
-
-
-def check_tool_refs(result: AnalysisResult) -> Check:
-    """Reject/flag any tool_ref that does not exist in the trace."""
-    raise NotImplementedError
+    tracer = Tracer()
+    identity, flags = await resolve_identity(chemical_input, tracer)
+    return AnalysisResult(
+        chemical_input=chemical_input,
+        endpoint=ENDPOINT,
+        identity=identity,
+        flags=flags,
+        trace=tracer.entries,
+    )

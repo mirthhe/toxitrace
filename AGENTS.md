@@ -11,7 +11,8 @@ ToxiTrace checks how far an Ames mutagenicity prediction from ToxIndex can be tr
 | `backend/app/adapters/` | ToxIndex and PubChem clients. Every call is traced; errors are raised, never turned into results. |
 | `backend/app/identity.py` | Rule R1: substance identity from DSSTox (via ToxIndex) and PubChem. |
 | `backend/app/reference_data.py` | Downloads and verifies the public reference datasets into `data/`. |
-| `backend/tests/` | Unit tests on recorded responses (`fixtures/`), plus opt-in live contract tests (`live/`). |
+| `backend/recordings/` | Recorded real API responses, used by the unit tests and by offline mode (`app/replay.py`). |
+| `backend/tests/` | Unit and API tests on those recordings, plus opt-in live contract tests (`live/`). |
 | `frontend/` | React + TypeScript interface. |
 | `docs/` | Plan, API discovery notes, scientific rationale. |
 
@@ -25,6 +26,18 @@ uv run python -m app.reference_data     # download reference data into ../data (
 uv run pytest                           # unit tests: offline, no API key needed
 uv run ruff check app tests             # lint
 ```
+
+Run the app (two terminals):
+
+```bash
+# backend/ — offline mode replays recorded responses; no API calls, no key needed
+TOXITRACE_OFFLINE=true uv run uvicorn app.main:app --reload --port 8000
+
+# frontend/ — http://localhost:5173 (proxies /api to the backend)
+npm install && npm run dev
+```
+
+Use offline mode for development and UI work. Without `TOXITRACE_OFFLINE`, every analysis makes live ToxIndex and PubChem calls (see the policy below).
 
 ## External API usage policy
 
@@ -51,7 +64,7 @@ ToxiTrace calls shared, hosted services: ToxIndex (authenticated, logged per API
   - `captures/` (raw API responses from discovery);
   - `notes/` (private working notes).
 - **Never commit extracts of the Hansen or ISSSTY datasets.** Their kiln entries state "No licence granted"; query them live only, with approval.
-- **Test fixtures in `backend/tests/fixtures/` are small, recorded responses.** They contain only public identity data or single predictions. Keep them minimal and never include credentials.
+- **Recordings in `backend/recordings/` are small, real API responses.** They contain only public identity data or single predictions. Keep them minimal and never include credentials.
 - **Never pass the API key to the frontend or to an LLM prompt.** `tests/test_toxindex_adapter.py` asserts that it never appears in a trace.
 
 ## Scientific integrity

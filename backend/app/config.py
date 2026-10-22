@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     llm_api_key: str = ""
 
+    # Serve external API calls from backend/recordings/ instead of the network (app/replay.py).
+    toxitrace_offline: bool = False
+
     # Reference data fetched by `python -m app.reference_data`; gitignored.
     data_dir: Path = REPO_ROOT / "data"
 

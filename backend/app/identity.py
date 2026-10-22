@@ -88,10 +88,16 @@ async def resolve_identity(text: str, tracer: Tracer) -> tuple[Identity, list[Fl
                           message="Structure taken from PubChem, not from a regulatory registry."))
 
     if smiles is None:
-        flags.append(Flag(rule_id="R1", severity="caution",
-                          refs=[r for r in (dsstox_ref, pubchem_ref) if r],
-                          message=f"No structure found for '{text}' in DSSTox or PubChem. "
-                                  "Try a CAS number or SMILES."))
+        refs = [r for r in (dsstox_ref, pubchem_ref) if r]
+        failed = [e.source for e in tracer.entries
+                  if e.ref in refs and e.status not in ("ok", "not_found")]
+        message = (
+            f"No structure could be established: the lookup in {' and '.join(failed)} failed, "
+            "so absence from these registries is not shown."
+            if failed else
+            f"No structure found for '{text}' in DSSTox or PubChem. Try a CAS number or SMILES."
+        )
+        flags.append(Flag(rule_id="R1", severity="caution", refs=refs, message=message))
         return identity, flags
 
     # 3. Local InChIKey of the exact structure every downstream step will use.

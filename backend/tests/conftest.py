@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-FIXTURES = Path(__file__).parent / "fixtures"
+FIXTURES = Path(__file__).parent.parent / "recordings"
 TOXINDEX_TOOLS = "https://platform.toxindex.com/v1/tools"
 PUBCHEM = "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound"
 PUBCHEM_PROPS = "property/MolecularFormula,SMILES,InChIKey,IUPACName/JSON"

@@ -9,6 +9,8 @@ from urllib.parse import quote
 
 import httpx
 
+from app import replay
+from app.config import settings
 from app.schemas import Candidate
 from app.trace import Tracer
 
@@ -26,7 +28,8 @@ async def _lookup(namespace: str, value: str, tracer: Tracer) -> tuple[str, list
     request = {"namespace": namespace, "value": value}
     start = time.perf_counter()
     try:
-        async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS) as client:
+        transport = replay.transport() if settings.toxitrace_offline else None
+        async with httpx.AsyncClient(timeout=TIMEOUT_SECONDS, transport=transport) as client:
             resp = await client.get(url)
     except httpx.TimeoutException:
         ref = tracer.record("pubchem", f"lookup by {namespace}", "timeout", request,
