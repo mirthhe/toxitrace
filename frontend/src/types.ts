@@ -46,11 +46,96 @@ export interface TraceEntry {
   retrieved_at: string
 }
 
+export type Call = 'positive' | 'negative' | 'equivocal' | 'unknown'
+
+export interface Prediction {
+  source: string
+  call: Call
+  assay: string
+  probability: number | null
+  threshold: number | null
+  confidence: string | null
+  applicability: 'in_domain' | 'outside_domain' | 'not_reported'
+  detail: string | null
+  tool_ref: string
+}
+
+export interface Evidence {
+  source: string
+  method: 'experimental' | 'curated'
+  call: Call
+  assay: string
+  system: string | null
+  detail: string | null
+  confidence: string | null
+  tool_ref: string
+}
+
+export interface NotRetrieved {
+  source: string
+  reason: string
+  tool_ref: string | null
+}
+
+export interface UpstreamVerdict {
+  conclusion: string
+  basis: string | null
+  confidence: string | null
+  mechanism: string | null
+  tool_ref: string
+}
+
+export interface Neighbour {
+  smiles: string
+  inchikey: string
+  call: Call
+  split: string
+  similarity: number
+}
+
+export interface StructuralSupport {
+  dataset: string
+  fingerprint: string
+  exact_match: Neighbour | null
+  neighbours: Neighbour[]
+  tool_ref: string
+}
+
+export interface EmaEntry {
+  name: string
+  cpca_category: string | null
+  ai_ng_per_day: number | null
+  publication_date: string | null
+  revision: string | null
+}
+
+export interface RegulatoryContext {
+  n_nitroso: boolean
+  ema: EmaEntry | null
+  tool_ref: string
+}
+
+export type SummaryLabel = 'supported_positive' | 'supported_negative' | 'conflicting' | 'prediction_only' | 'insufficient'
+
+export interface Summary {
+  label: SummaryLabel
+  text: string
+  basis: string[]
+}
+
 export interface AnalysisResult {
   chemical_input: string
   endpoint: string
   identity: Identity | null
+  summary: Summary | null
   flags: Flag[]
+  predictions: Prediction[]
+  evidence: Evidence[]
+  not_retrieved: NotRetrieved[]
+  upstream_verdict: UpstreamVerdict | null
+  structural_support: StructuralSupport | null
+  regulatory: RegulatoryContext | null
+  limitations: string[]
   trace: TraceEntry[]
 }
 

@@ -671,3 +671,248 @@ pre {
     flex-basis: 100%;
   }
 }
+
+/* Verdict variants and text */
+
+.verdict-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.verdict-text {
+  margin: 4px 0 0;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.verdict-supported {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.verdict .rule {
+  font-weight: 400;
+}
+
+/* Ames calls: colours encode the result, not a flag severity */
+
+.call {
+  display: inline-block;
+  font: 600 0.75rem/1.6 var(--sans);
+  padding: 1px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.call-positive {
+  color: #fff;
+  background: #b0472f;
+}
+
+.call-negative {
+  color: #fff;
+  background: #3d6a4d;
+}
+
+.call-equivocal {
+  color: var(--caution);
+  background: var(--caution-bg);
+}
+
+.call-unknown {
+  color: var(--muted);
+  background: var(--sunken);
+}
+
+/* Predictions */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table td {
+  vertical-align: top;
+}
+
+.prob {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prob-track {
+  position: relative;
+  width: 120px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.prob-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3d6a4d, #c4703f);
+}
+
+.prob-threshold {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--ink);
+  opacity: 0.5;
+}
+
+.applicability {
+  font-size: 0.82rem;
+}
+
+.applicability-outside_domain {
+  color: var(--caution);
+  font-weight: 600;
+}
+
+.applicability-not_reported {
+  color: var(--muted);
+}
+
+.upstream {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+.upstream h3 {
+  margin-top: 0;
+}
+
+.upstream p {
+  margin: 4px 0;
+}
+
+/* Evidence matrix */
+
+.matrix .matrix-col {
+  text-align: center;
+  width: 92px;
+}
+
+.matrix-group th {
+  padding-top: 18px;
+  font: 600 0.72rem var(--sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border-bottom: 2px solid var(--line-strong);
+}
+
+.dash {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* Structural support */
+
+.neighbours {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.neighbour {
+  margin: 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+.neighbour.low {
+  opacity: 0.65;
+}
+
+.neighbour img {
+  display: block;
+  width: 100%;
+  height: 110px;
+  object-fit: contain;
+  background: var(--surface);
+  border-radius: 8px;
+}
+
+.neighbour-sim {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sim-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--track);
+}
+
+.sim-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.neighbour-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.neighbour-smiles {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Context */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.stat {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+.stat dt {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.stat dd {
+  margin: 2px 0 0;
+  font: 700 1.1rem var(--display);
+}
+
+.limitations {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.limitations li + li {
+  margin-top: 4px;
+}

@@ -18,6 +18,7 @@ from pathlib import Path
 import httpx
 import pandas as pd
 
+from app.chem import inchikey
 from app.config import settings
 
 MUTAGENLOU_COMMIT = "a9780a60774eb522b78bd92b83c30d8deae00ff5"
@@ -167,6 +168,25 @@ def parse_ema(xlsx: Path) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
+def build_mutagen_index(raw_dir: Path) -> pd.DataFrame:
+    """One row per parseable MutagenLou2023 compound with its InChIKey, label and split.
+
+    InChIKeys make exact identity lookups possible (fingerprint similarity cannot: see
+    docs/discovery-notes.md on the PFOA/PFDA collision).
+    """
+    frames = []
+    for split in ("train", "test", "validation"):
+        df = pd.read_csv(raw_dir / f"{split}.csv")
+        frames.append(pd.DataFrame({
+            "smiles": df["SMILES"],
+            "is_mutagen": df["Y"].astype(int),
+            "split": split,
+        }))
+    index = pd.concat(frames, ignore_index=True)
+    index["inchikey"] = index["smiles"].map(inchikey)
+    return index.dropna(subset=["inchikey"])
+
+
 def extract_httk_tables(tarball: Path) -> dict[str, pd.DataFrame]:
     """Read the two httk tables ToxiTrace needs from the package's Tables.RData."""
     import rdata  # only needed at setup
@@ -192,13 +212,19 @@ def prepare(data_dir: Path, force: bool = False) -> dict:
     derived.mkdir(parents=True, exist_ok=True)
 
     ema_xlsx = data_dir / "raw" / "ema/ema_nitrosamine_ai.xlsx"
-    parse_ema(ema_xlsx).to_csv(derived / "ema_nitrosamine_ai.csv", index=False)
+    ema = parse_ema(ema_xlsx)
+    ema["inchikey"] = ema["smiles"].map(lambda smi: inchikey(smi) if isinstance(smi, str) else None)
+    ema.to_csv(derived / "ema_nitrosamine_ai.csv", index=False)
     manifest["sources"]["ema/ema_nitrosamine_ai.xlsx"]["revision"] = ema_revision(ema_xlsx)
 
     httk_tarball = data_dir / "raw" / f"httk/httk_{HTTK_VERSION}.tar.gz"
     manifest["sources"][f"httk/httk_{HTTK_VERSION}.tar.gz"]["version"] = HTTK_VERSION
     for name, table in extract_httk_tables(httk_tarball).items():
         table.to_csv(derived / f"{name}.csv", index=False)
+
+    build_mutagen_index(data_dir / "raw" / "mutagenlou2023").to_csv(
+        derived / "mutagenlou2023_index.csv", index=False
+    )
 
     for path in sorted(derived.glob("*.csv")):
         manifest["derived"][path.name] = {"sha256": sha256_of(path), "rows": len(pd.read_csv(path))}

@@ -13,6 +13,17 @@ export function OverviewTab({ result }: { result: AnalysisResult }) {
       {sorted.length === 0 ? <p className="muted">No flags raised.</p> : <FlagList flags={sorted} />}
 
       {result.identity && <IdentityDetails identity={result.identity} />}
+
+      {result.limitations.length > 0 && (
+        <>
+          <h3>Limitations</h3>
+          <ul className="limitations">
+            {result.limitations.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   )
 }

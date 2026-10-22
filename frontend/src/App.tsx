@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { analyze, getHealth } from './api'
+import { ContextTab } from './components/ContextTab'
+import { EvidenceTab } from './components/EvidenceTab'
 import { OverviewTab } from './components/OverviewTab'
+import { PredictionsTab } from './components/PredictionsTab'
 import { SummaryHeader } from './components/SummaryHeader'
+import { SupportTab } from './components/SupportTab'
 import { TraceTab } from './components/TraceTab'
 import { downloadJson } from './export'
 import { TraceNavigation, type TabId } from './navigation'
@@ -11,26 +15,6 @@ const DEMO_LABELS: Record<string, string> = {
   '62-75-9': 'NDMA',
   '335-67-1': 'PFOA',
   'O=NN1CC2CC(C1)c1cc3nccnc3cc12': 'N-nitroso-varenicline',
-}
-
-// Tabs whose rules are not built yet show what they will contain (docs/plan.md §5).
-const PLANNED: Partial<Record<TabId, { rules: string; text: string }>> = {
-  predictions: {
-    rules: 'R2–R4',
-    text: 'AmesFormer, VEGA and structural alerts, each labelled as predicted, with disagreement and applicability-domain flags.',
-  },
-  evidence: {
-    rules: 'R2, R7',
-    text: 'An evidence matrix of measured and curated findings, with sources that returned nothing listed as "not retrieved".',
-  },
-  support: {
-    rules: 'R5, R6',
-    text: 'Nearest measured neighbours from MutagenLou2023 and whether the prediction is independent of them.',
-  },
-  context: {
-    rules: 'R8, R9',
-    text: 'EMA CPCA category and acceptable intake for N-nitroso compounds; httk toxicokinetic context.',
-  },
 }
 
 const TABS: { id: TabId; label: string }[] = [
@@ -195,7 +179,7 @@ function Result({ result, health }: { result: AnalysisResult; health: Health | n
                   type="button"
                   role="tab"
                   aria-selected={tab === t.id}
-                  className={`tab${tab === t.id ? ' active' : ''}${PLANNED[t.id] ? ' planned' : ''}`}
+                  className={`tab${tab === t.id ? ' active' : ''}`}
                   onClick={() => setTab(t.id)}
                 >
                   {t.label}
@@ -210,22 +194,14 @@ function Result({ result, health }: { result: AnalysisResult; health: Health | n
 
           <div className="card tab-panel" role="tabpanel">
             {tab === 'overview' && <OverviewTab result={result} />}
+            {tab === 'predictions' && <PredictionsTab result={result} />}
+            {tab === 'evidence' && <EvidenceTab result={result} />}
+            {tab === 'support' && <SupportTab result={result} />}
+            {tab === 'context' && <ContextTab result={result} />}
             {tab === 'trace' && <TraceTab entries={result.trace} highlight={highlight} />}
-            {PLANNED[tab] && <PlannedTab {...PLANNED[tab]} />}
           </div>
         </div>
       </main>
     </TraceNavigation.Provider>
-  )
-}
-
-function PlannedTab({ rules, text }: { rules: string; text: string }) {
-  return (
-    <div className="tab-body planned-body">
-      <p>
-        <span className="rule">{rules}</span> Not built yet.
-      </p>
-      <p className="muted">{text}</p>
-    </div>
   )
 }

@@ -22,6 +22,12 @@ TOXINDEX = {
     ("tox_chemical_identity", "N-nitroso-varenicline"):
         "toxindex/identity_n-nitroso-varenicline.json",
     ("tox_chemical_identity", NNV_SMILES): "toxindex/identity_n-nitroso-varenicline_smiles.json",
+    ("toxjobs_predict", "CN(C)N=O"): "toxindex/amesformer_ndma.json",
+    ("toxjobs_predict", "OC(=O)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)C(F)(F)F"):
+        "toxindex/amesformer_pfoa.json",
+    ("toxjobs_predict", NNV_SMILES): "toxindex/amesformer_n-nitroso-varenicline.json",
+    ("tox_genotoxicity", "DTXSID7021029"): "toxindex/genotox_ndma.json",
+    ("tox_genotoxicity", "DTXSID8031865"): "toxindex/genotox_pfoa.json",
 }
 
 # (namespace, value) -> recording, for PubChem GET /compound/{namespace}/{value}/property/...

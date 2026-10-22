@@ -55,21 +55,102 @@ class Identity(BaseModel):
     candidates: list[Candidate] = []  # filled when status == "ambiguous"
 
 
+Call = Literal["positive", "negative", "equivocal", "unknown"]
+Applicability = Literal["in_domain", "outside_domain", "not_reported"]
+
+
 class Prediction(BaseModel):
-    source: Literal["toxindex"] = "toxindex"
-    model_id: str
-    # Keep upstream semantics: categorical, probabilistic or numeric. No silent conversion.
-    raw_value: Any
-    unit: str | None = None
+    """A model or rule-based call. Never presented as an observation (rule R2)."""
+
+    source: str  # e.g. "AmesFormer-Pro", "VEGA mutagenicity models"
+    call: Call
+    assay: str = "bacterial reverse mutation"
+    # Upstream semantics kept as given: a probability is not converted into a call or back.
+    probability: float | None = None
+    threshold: float | None = None
+    confidence: str | None = None  # upstream label, e.g. "Low"; not a probability
+    applicability: Applicability = "not_reported"
+    detail: str | None = None
     tool_ref: str
 
 
 class Evidence(BaseModel):
+    """A measured or curated experimental result, as labelled by its upstream source."""
+
     source: str
-    description: str
-    value: Any
-    unit: str | None = None
+    method: Literal["experimental", "curated"]
+    call: Call
+    assay: str
+    system: str | None = None
+    detail: str | None = None
+    confidence: str | None = None
     tool_ref: str
+
+
+class NotRetrieved(BaseModel):
+    """A source that was queried (or could not be) and returned nothing: absence of a result,
+    not evidence of absence (rule R7)."""
+
+    source: str
+    reason: str
+    tool_ref: str | None = None
+
+
+class UpstreamVerdict(BaseModel):
+    """ToxIndex's own aggregate verdict, shown for transparency next to ToxiTrace's summary."""
+
+    conclusion: str
+    basis: str | None = None
+    confidence: str | None = None
+    mechanism: str | None = None
+    tool_ref: str
+
+
+class Neighbour(BaseModel):
+    smiles: str
+    inchikey: str
+    call: Call
+    split: str
+    similarity: float
+
+
+class StructuralSupport(BaseModel):
+    """Measured compounds near the query in the reference dataset (rules R5, R6)."""
+
+    dataset: str
+    fingerprint: str
+    exact_match: Neighbour | None = None
+    neighbours: list[Neighbour] = []
+    tool_ref: str
+
+
+class EmaEntry(BaseModel):
+    name: str
+    cpca_category: str | None = None
+    ai_ng_per_day: float | None = None
+    publication_date: str | None = None
+    revision: str | None = None
+
+
+class RegulatoryContext(BaseModel):
+    """Nitrosamine context (rule R8)."""
+
+    n_nitroso: bool
+    ema: EmaEntry | None = None
+    tool_ref: str
+
+
+SummaryLabel = Literal[
+    "supported_positive", "supported_negative", "conflicting", "prediction_only", "insufficient"
+]
+
+
+class Summary(BaseModel):
+    """ToxiTrace's computed overall assessment; derived from the flags, not generated."""
+
+    label: SummaryLabel
+    text: str
+    basis: list[str] = []  # rule ids that determined the label
 
 
 class Check(BaseModel):
@@ -95,10 +176,14 @@ class AnalysisResult(BaseModel):
     chemical_input: str
     endpoint: str
     identity: Identity | None = None
+    summary: Summary | None = None
     flags: list[Flag] = []
     predictions: list[Prediction] = []
     evidence: list[Evidence] = []
-    evidence_retrieved: bool = False
+    not_retrieved: list[NotRetrieved] = []
+    upstream_verdict: UpstreamVerdict | None = None
+    structural_support: StructuralSupport | None = None
+    regulatory: RegulatoryContext | None = None
     interpretation: str | None = None
     limitations: list[str] = []
     checks: list[Check] = []

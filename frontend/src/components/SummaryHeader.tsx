@@ -1,5 +1,5 @@
 import { SEVERITY_ORDER, countBySeverity } from '../flags'
-import type { AnalysisResult } from '../types'
+import type { AnalysisResult, SummaryLabel } from '../types'
 
 export function SummaryHeader({ result }: { result: AnalysisResult }) {
   const identity = result.identity
@@ -44,18 +44,34 @@ export function SummaryHeader({ result }: { result: AnalysisResult }) {
   )
 }
 
+const SUMMARY_LABELS: Record<SummaryLabel, { title: string; tone: string }> = {
+  supported_positive: { title: 'Supported: Ames positive', tone: 'supported' },
+  supported_negative: { title: 'Supported: Ames negative', tone: 'supported' },
+  conflicting: { title: 'Conflicting evidence', tone: 'conflict' },
+  prediction_only: { title: 'Prediction only', tone: 'caution' },
+  insufficient: { title: 'Insufficient data', tone: 'pending' },
+}
+
 function Verdict({ result }: { result: AnalysisResult }) {
   const status = result.identity?.status
   if (status === 'ambiguous') {
     return <div className="verdict verdict-caution">Ambiguous input: choose one substance below before analysing.</div>
   }
-  if (status !== 'resolved') {
+  if (status !== 'resolved' || !result.summary) {
     return <div className="verdict verdict-caution">No analysis: the substance could not be identified.</div>
   }
-  // The overall verdict is computed by rules R2–R9, which are not built yet.
+  const { title, tone } = SUMMARY_LABELS[result.summary.label]
   return (
-    <div className="verdict verdict-pending">
-      Verdict pending: the weight-of-evidence rules (R2–R9) are not built yet. Identity is established.
+    <div className={`verdict verdict-${tone}`}>
+      <div className="verdict-title">
+        {title}
+        {result.summary.basis.map((r) => (
+          <span key={r} className="rule">
+            {r}
+          </span>
+        ))}
+      </div>
+      <p className="verdict-text">{result.summary.text}</p>
     </div>
   )
 }
