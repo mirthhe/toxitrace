@@ -1009,3 +1009,76 @@ pre {
   display: block;
   margin-top: 2px;
 }
+
+/* Interpretation (R10) */
+
+.interpretation {
+  margin-bottom: 24px;
+  padding: 18px 20px 12px;
+  border-radius: 12px;
+  background: var(--sunken);
+}
+
+.interpretation h3 {
+  margin: 0 0 6px;
+}
+
+.interpretation p {
+  margin: 8px 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 72ch;
+}
+
+.cite {
+  padding: 0 2px;
+  margin-left: 1px;
+  font: 600 0.7rem var(--sans);
+  color: var(--accent);
+  border-radius: 3px;
+}
+
+.cite:hover {
+  background: var(--accent-soft);
+}
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 10px 0 0;
+  padding: 10px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.sources li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.source-n {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.interpretation-meta {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.interpretation-meta summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.interpretation-meta ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}

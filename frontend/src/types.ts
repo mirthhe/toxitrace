@@ -142,6 +142,20 @@ export interface Summary {
   basis: string[]
 }
 
+export interface Interpretation {
+  text: string
+  source: 'llm' | 'template'
+  model: string | null
+  tool_ref: string | null
+  note: string | null
+}
+
+export interface Check {
+  name: string
+  status: 'passed' | 'failed' | 'not_run'
+  detail: string | null
+}
+
 export interface AnalysisResult {
   chemical_input: string
   endpoint: string
@@ -155,6 +169,8 @@ export interface AnalysisResult {
   structural_support: StructuralSupport | null
   regulatory: RegulatoryContext | null
   toxicokinetics: TkContext | null
+  interpretation: Interpretation | null
+  checks: Check[]
   limitations: string[]
   trace: TraceEntry[]
 }

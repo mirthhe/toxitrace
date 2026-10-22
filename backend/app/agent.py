@@ -1,7 +1,7 @@
 """Analysis pipeline (docs/plan.md §4).
 
 identity (R1) -> ToxIndex prediction + evidence (in parallel) -> local reference data
--> rules R2-R9 -> computed summary. The LLM narrative (R10) follows later.
+-> rules R2-R9 -> computed summary -> LLM narrative, accepted only if grounded (R10).
 
 At most 3 ToxIndex calls per analysis: identity, AmesFormer, genotoxicity.
 """
@@ -9,7 +9,7 @@ At most 3 ToxIndex calls per analysis: identity, AmesFormer, genotoxicity.
 import asyncio
 import time
 
-from app import findings, reference, rules
+from app import findings, narrative, reference, rules
 from app.adapters import toxindex
 from app.identity import resolve_identity
 from app.reference import FINGERPRINT, MUTAGEN_DATASET
@@ -159,6 +159,8 @@ async def run_analysis(chemical_input: str) -> AnalysisResult:
 
     result.summary = rules.summarise(flags, predictions, evidence, support)
     result.limitations = LIMITATIONS
+    result.interpretation, grounding = await narrative.narrate(result, tracer)
+    result.checks = [grounding]
     result.trace = tracer.entries
     return result
 

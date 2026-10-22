@@ -1,11 +1,14 @@
 import { SEVERITY_ORDER } from '../flags'
 import type { AnalysisResult, Flag, Identity } from '../types'
+import { InterpretationCard } from './InterpretationCard'
 import { RefChips } from './RefChip'
 
 export function OverviewTab({ result }: { result: AnalysisResult }) {
   const sorted = [...result.flags].sort((a, b) => SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity))
   return (
     <div className="tab-body">
+      {result.interpretation && <InterpretationCard interpretation={result.interpretation} checks={result.checks} />}
+
       <h3>Flags</h3>
       <p className="muted">
         Each flag comes from one rule in <code>docs/plan.md</code> and cites the calls it is based on.

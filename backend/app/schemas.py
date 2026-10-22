@@ -177,6 +177,16 @@ class Summary(BaseModel):
     basis: list[str] = []  # rule ids that determined the label
 
 
+class Interpretation(BaseModel):
+    """The plain-language explanation (rule R10): an accepted LLM narrative or the template."""
+
+    text: str
+    source: Literal["llm", "template"]
+    model: str | None = None
+    tool_ref: str | None = None
+    note: str | None = None  # why the template was used, if it was
+
+
 class Check(BaseModel):
     name: str
     status: CheckStatus = "not_run"
@@ -209,7 +219,7 @@ class AnalysisResult(BaseModel):
     structural_support: StructuralSupport | None = None
     regulatory: RegulatoryContext | None = None
     toxicokinetics: TkContext | None = None
-    interpretation: str | None = None
+    interpretation: Interpretation | None = None
     limitations: list[str] = []
     checks: list[Check] = []
     trace: list[TraceEntry] = []
